@@ -30,7 +30,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Nonnull
     @NotBlank(message = "username cannot be blank")

@@ -1,4 +1,4 @@
-package com.example.springproject.entity;
+package com.example.springproject.dto;
 
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.Email;
@@ -13,10 +13,6 @@ import lombok.Setter;
 @RequiredArgsConstructor
 @NoArgsConstructor
 public class UserEmailUpdateDTO {
-
-    @Nonnull
-    @NotBlank(message = "username cannot be blank")
-    private String username;
 
     @Nonnull
     @NotBlank(message = "email cannot be blank")

@@ -3,9 +3,10 @@ package com.example.springproject.service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.springproject.dto.UserEmailUpdateDTO;
+import com.example.springproject.dto.UserPasswordUpdateDTO;
 import com.example.springproject.entity.User;
-import com.example.springproject.entity.UserEmailUpdateDTO;
-import com.example.springproject.entity.UserPasswordUpdateDTO;
+import com.example.springproject.exception.DuplicateEntityException;
 import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.UserRepository;
 
@@ -48,21 +49,36 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public User registerUser(User user) {
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new DuplicateEntityException("email", user.getEmail(), User.class);
+        }
+
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new DuplicateEntityException("username", user.getUsername(), User.class);
+        }
+
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Override
-    public void updateEmail(Long id, UserEmailUpdateDTO userDTO) {
+    public User updateEmail(Long id, UserEmailUpdateDTO userDTO) {
+
+        if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
+            throw new DuplicateEntityException("email", userDTO.getEmail(), User.class);
+        }
+
         User user = getUserById(id);
         user.setEmail(userDTO.getEmail());
-        userRepository.save(user);
+
+        return userRepository.save(user);
     }
 
     @Override
     public void updatePassword(Long id, UserPasswordUpdateDTO userDTO) {
         User user = getUserById(id);
-        user.setPassword(userDTO.getPassword());
+        user.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
         userRepository.save(user);
     }
 }
