@@ -24,10 +24,6 @@ public interface IUserService {
 
     void updatePassword(Long id, UserPasswordUpdateDTO userDTO);
 
-    default UserDTO convertToUserResponse(User user) {
-        return UserDTO.getUserResponse(user);
-    }
-
     default boolean isAuthorizedOrAdmin(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

@@ -12,7 +12,4 @@ public record UserDTO(
         @NotNull String email,
         @NotNull Role role) {
 
-    public static UserDTO getUserResponse(User user) {
-        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
-    }
 }

@@ -25,10 +25,10 @@ public class SpringProjectApplication implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 
 		User[] users = new User[] {
-				new User("Harry Potter", "a1@a.com", "123"),
-				new User("Ron Weasley", "a2@a.com", "123"),
-				new User("Hermione Granger", "a3@a.com", "123"),
-				new User("Neville Longbottom", "a4@a.com", "123"),
+				new User("John Doe", "john.doe@example.com", "J0hnD!123"),
+				new User("Jane Smith", "jane.smith@example.com", "JaneS@321"),
+				new User("Emily Johnson", "emily.johnson@example.com", "Em!lyJ456"),
+				new User("Michael Brown", "michael.brown@example.com", "M1chaelB$789")
 		};
 
 		Arrays.stream(users).forEach(userRepository::save);

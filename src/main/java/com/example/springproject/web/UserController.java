@@ -8,6 +8,7 @@ import com.example.springproject.dto.UserEmailUpdateDTO;
 import com.example.springproject.dto.UserPasswordUpdateDTO;
 import com.example.springproject.entity.User;
 import com.example.springproject.service.IUserService;
+import com.example.springproject.service.UserDTOMapper;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -30,18 +31,19 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class UserController {
 
     private final IUserService userService;
+    private final UserDTOMapper userDTOMapper;
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
-        return new ResponseEntity<>(userService.convertToUserResponse(user), HttpStatus.OK);
+        return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.OK);
     }
 
     @GetMapping("/all")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         List<UserDTO> response = users.stream()
-                .map(userService::convertToUserResponse)
+                .map(userDTOMapper)
                 .collect(Collectors.toList());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -50,7 +52,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody User user) {
         user = userService.registerUser(user);
-        return new ResponseEntity<>(userService.convertToUserResponse(user), HttpStatus.CREATED);
+        return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.CREATED);
     }
 
     @PutMapping("/update_email/{id}")
@@ -59,7 +61,7 @@ public class UserController {
 
         if (userService.isAuthorizedOrAdmin(id)) {
             User user = userService.updateEmail(id, userDTO);
-            return new ResponseEntity<>(userService.convertToUserResponse(user), HttpStatus.OK);
+            return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.OK);
         } else {
             throw new AccessDeniedException("User not authorized to change email.");
         }

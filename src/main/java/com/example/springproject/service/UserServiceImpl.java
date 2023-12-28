@@ -19,8 +19,8 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserServiceImpl implements IUserService {
 
-    private UserRepository userRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
     public User getUserByUsername(String username) {
