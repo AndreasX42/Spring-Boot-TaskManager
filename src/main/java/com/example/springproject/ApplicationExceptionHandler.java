@@ -28,66 +28,68 @@ import jakarta.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public BCryptPasswordEncoder bCryptPasswordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @ExceptionHandler({ EntityNotFoundException.class })
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(EntityNotFoundException ex,
-            HttpServletRequest request) {
+        @ExceptionHandler({ EntityNotFoundException.class })
+        public ResponseEntity<ErrorResponse> handleResourceNotFoundException(EntityNotFoundException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                Arrays.array(ex.getMessage()), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
+                ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
+                                Arrays.array(ex.getMessage()), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
 
-        return new ResponseEntity<>(reponse, HttpStatus.NOT_FOUND);
-    }
+                return new ResponseEntity<>(reponse, HttpStatus.NOT_FOUND);
+        }
 
-    @ExceptionHandler({ DuplicateEntityException.class })
-    public ResponseEntity<ErrorResponse> handleDuplicateResource(DuplicateEntityException ex,
-            HttpServletRequest request) {
+        @ExceptionHandler({ DuplicateEntityException.class })
+        public ResponseEntity<ErrorResponse> handleDuplicateResource(DuplicateEntityException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                Arrays.array(ex.getMessage()), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+                ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
+                                Arrays.array(ex.getMessage()), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
-        return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
+        }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handlResponseEntity(DataIntegrityViolationException ex,
-            HttpServletRequest request) {
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ErrorResponse> handlResponseEntity(DataIntegrityViolationException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                Arrays.array("Data Integrity Violation: we cannot process your request."),
-                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+                ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
+                                Arrays.array("Data Integrity Violation: we cannot process your request."),
+                                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
-        return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
+        }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleDeniedAccess(AccessDeniedException ex,
-            HttpServletRequest request) {
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleDeniedAccess(AccessDeniedException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                Arrays.array(ex.getMessage()),
-                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+                ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
+                                Arrays.array(ex.getMessage()),
+                                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
-        return new ResponseEntity<>(reponse, HttpStatus.FORBIDDEN);
-    }
+                return new ResponseEntity<>(reponse, HttpStatus.FORBIDDEN);
+        }
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        @Override
+        protected ResponseEntity<Object> handleMethodArgumentNotValid(
+                        MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status,
+                        WebRequest request) {
 
-        String requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
+                String requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
 
-        String[] messages = ex.getBindingResult().getAllErrors().stream().map(error -> error.getDefaultMessage())
-                .toArray(String[]::new);
+                String[] messages = ex.getBindingResult().getAllErrors().stream()
+                                .map(error -> error.getDefaultMessage())
+                                .toArray(String[]::new);
 
-        ErrorResponse response = new ErrorResponse(requestUri,
-                messages, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+                ErrorResponse response = new ErrorResponse(requestUri,
+                                messages, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
 
 }

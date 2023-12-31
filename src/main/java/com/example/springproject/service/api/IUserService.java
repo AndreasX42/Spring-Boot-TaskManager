@@ -1,28 +1,17 @@
-package com.example.springproject.service;
-
-import java.util.List;
+package com.example.springproject.service.api;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 
 import com.example.springproject.dto.UserDTO;
-import com.example.springproject.dto.UserEmailUpdateDTO;
-import com.example.springproject.dto.UserPasswordUpdateDTO;
 import com.example.springproject.entity.User;
 
-public interface IUserService {
-    User getUserById(Long id);
+public interface IUserService extends IService<User, UserDTO> {
 
-    User getUserByUsername(String username);
+    User create(User user);
 
-    List<User> getAllUsers();
-
-    User registerUser(User user);
-
-    User updateEmail(Long id, UserEmailUpdateDTO userDTO);
-
-    void updatePassword(Long id, UserPasswordUpdateDTO userDTO);
+    User getByName(String username);
 
     default boolean isAuthorizedOrAdmin(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -32,7 +21,7 @@ public interface IUserService {
         }
 
         String currentPrincipalName = authentication.getName();
-        User user = getUserByUsername(currentPrincipalName);
+        User user = getByName(currentPrincipalName);
 
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> User.Role.ADMIN.toString().equals(grantedAuthority.getAuthority()));

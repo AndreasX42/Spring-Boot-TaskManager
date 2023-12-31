@@ -19,32 +19,34 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @AllArgsConstructor
 public class SecurityConfiguration {
 
-    private AuthenticationManager authenticationManager;
+        private AuthenticationManager authenticationManager;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager);
-        authFilter.setFilterProcessesUrl(SecurityConstants.AUTH_PATH);
+                AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager);
+                authFilter.setFilterProcessesUrl(SecurityConstants.AUTH_PATH);
 
-        http
-                .headers(headers -> headers.frameOptions().disable())
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/h2/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
-                                "/swagger-resources/**", "/webjars/**")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.POST, SecurityConstants.REGISTER_PATH)
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(new ExceptionHandlerFilter(), AuthenticationFilter.class)
-                .addFilter(authFilter)
-                .addFilterAfter(new JWTAuthorizationFilter(), AuthenticationFilter.class)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                http
+                                .headers(headers -> headers.frameOptions().disable())
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(authorize -> authorize
+                                                .requestMatchers("/h2/**").permitAll()
+                                                .requestMatchers("api/v1/todos/**").permitAll()
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-resources/**", "/webjars/**")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, SecurityConstants.REGISTER_PATH)
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(new ExceptionHandlerFilter(), AuthenticationFilter.class)
+                                .addFilter(authFilter)
+                                .addFilterAfter(new JWTAuthorizationFilter(), AuthenticationFilter.class)
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        return http.build();
+                return http.build();
 
-    }
+        }
 }

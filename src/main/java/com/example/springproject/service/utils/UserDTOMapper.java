@@ -1,4 +1,4 @@
-package com.example.springproject.service;
+package com.example.springproject.service.utils;
 
 import java.util.function.Function;
 
@@ -12,6 +12,6 @@ public class UserDTOMapper implements Function<User, UserDTO> {
 
     @Override
     public UserDTO apply(User user) {
-        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+        return new UserDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole(), null);
     }
 }

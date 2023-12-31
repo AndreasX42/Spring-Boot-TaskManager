@@ -11,7 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.springproject.entity.User;
 import com.example.springproject.repository.UserRepository;
-import com.example.springproject.service.UserServiceImpl;
+import com.example.springproject.service.impl.UserService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,11 +32,11 @@ public class UserServiceImplTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	private UserServiceImpl userService;
+	private UserService userService;
 
 	@BeforeEach
 	public void setUp() {
-		userService = new UserServiceImpl(userRepository, bCryptPasswordEncoder);
+		userService = new UserService(userRepository, bCryptPasswordEncoder);
 	}
 
 	@Test
@@ -51,7 +51,7 @@ public class UserServiceImplTest {
 		when(bCryptPasswordEncoder.encode(anyString())).thenReturn("encodedPassword");
 		when(userRepository.save(any(User.class))).thenReturn(user);
 
-		User registeredUser = userService.registerUser(user);
+		User registeredUser = userService.create(user);
 
 		assert (registeredUser.getPassword()).equals("encodedPassword");
 	}

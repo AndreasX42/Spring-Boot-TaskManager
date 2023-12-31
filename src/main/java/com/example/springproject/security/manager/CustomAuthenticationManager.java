@@ -12,7 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.example.springproject.entity.User;
-import com.example.springproject.service.IUserService;
+import com.example.springproject.service.api.IUserService;
 
 import lombok.AllArgsConstructor;
 
@@ -26,7 +26,7 @@ public class CustomAuthenticationManager implements AuthenticationManager {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-        User user = userService.getUserByUsername(authentication.getName());
+        User user = userService.getByName(authentication.getName());
 
         if (!bCryptPasswordEncoder.matches(authentication.getCredentials().toString(), user.getPassword())) {
             throw new BadCredentialsException("INCORRECT PASSWORD");
