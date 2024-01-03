@@ -2,7 +2,9 @@ package com.example.springproject.security.filter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,14 +14,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.example.springproject.entity.User;
 import com.example.springproject.security.SecurityConstants;
+import com.example.springproject.security.manager.CustomUserDetails;
+import com.example.springproject.service.api.IUserService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
+
+    private IUserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -47,10 +56,17 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+        User user = userService.getByName(username);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null,
-                Collections.singletonList(authority));
+        Set<SimpleGrantedAuthority> authority = Collections
+                .singleton(new SimpleGrantedAuthority(user.getRole().toString()));
+
+        org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(user.getId(),
+                user.getUsername(), user.getPassword(),
+                authority);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+                authority);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

@@ -1,6 +1,7 @@
 package com.example.springproject.security.manager;
 
 import java.util.Collections;
+import java.util.Set;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,11 +33,17 @@ public class CustomAuthenticationManager implements AuthenticationManager {
             throw new BadCredentialsException("INCORRECT PASSWORD");
         }
 
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().toString());
+        Set<SimpleGrantedAuthority> authority = Collections
+                .singleton(new SimpleGrantedAuthority(user.getRole().toString()));
 
-        return new UsernamePasswordAuthenticationToken(authentication.getName(), user.getPassword(),
-                Collections.singleton(authority));
+        org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(user.getId(),
+                user.getUsername(), user.getPassword(),
+                authority);
 
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                authority);
     }
 
 }

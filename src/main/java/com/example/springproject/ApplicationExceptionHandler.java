@@ -1,8 +1,10 @@
 package com.example.springproject;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import org.assertj.core.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +40,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
                         HttpServletRequest request) {
 
                 ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                                Arrays.array(ex.getMessage()), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
+                                Arrays.asList(ex.getMessage()), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
 
                 return new ResponseEntity<>(reponse, HttpStatus.NOT_FOUND);
         }
@@ -48,7 +50,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
                         HttpServletRequest request) {
 
                 ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                                Arrays.array(ex.getMessage()), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+                                Arrays.asList(ex.getMessage()), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
                 return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
         }
@@ -58,7 +60,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
                         HttpServletRequest request) {
 
                 ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                                Arrays.array("Data Integrity Violation: we cannot process your request."),
+                                Arrays.asList("Data Integrity Violation: we cannot process your request."),
                                 HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
                 return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
@@ -69,7 +71,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
                         HttpServletRequest request) {
 
                 ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                                Arrays.array(ex.getMessage()),
+                                Arrays.asList(ex.getMessage()),
                                 HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
 
                 return new ResponseEntity<>(reponse, HttpStatus.FORBIDDEN);
@@ -82,9 +84,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
                 String requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
 
-                String[] messages = ex.getBindingResult().getAllErrors().stream()
+                List<String> messages = ex.getBindingResult().getAllErrors().stream()
                                 .map(error -> error.getDefaultMessage())
-                                .toArray(String[]::new);
+                                .collect(Collectors.toList());
 
                 ErrorResponse response = new ErrorResponse(requestUri,
                                 messages, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());

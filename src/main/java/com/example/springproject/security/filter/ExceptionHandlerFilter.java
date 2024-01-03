@@ -24,7 +24,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 
         catch (EntityNotFoundException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("USERNAME DOES NOT EXIST");
+            response.getWriter().write("USERNAME FROM JWT DOES NOT EXIST");
             response.getWriter().flush();
         }
 
