@@ -1,4 +1,4 @@
-package com.example.springproject;
+package com.example.springproject.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+
+import com.example.springproject.TestDataUtil;
 import com.example.springproject.dto.UserDTO;
 import com.example.springproject.entity.User;
 import com.example.springproject.exception.EntityNotFoundException;
@@ -17,7 +21,8 @@ import com.example.springproject.service.impl.UserService;
 import com.example.springproject.service.utils.UserDTOMapper;
 
 @SpringBootTest
-public class SPApplicationTest {
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+public class UserServiceIntegrationTests {
 
     private UserService userService;
     private UserRepository userRepository;
@@ -25,7 +30,7 @@ public class SPApplicationTest {
     private UserDTOMapper userDTOMapper;
 
     @Autowired
-    public SPApplicationTest(UserService userService, UserRepository userRepository,
+    public UserServiceIntegrationTests(UserService userService, UserRepository userRepository,
             BCryptPasswordEncoder bCryptPasswordEncoder, UserDTOMapper userDTOMapper) {
         this.userService = userService;
         this.userRepository = userRepository;
@@ -35,7 +40,6 @@ public class SPApplicationTest {
 
     @BeforeEach
     public void setUp() {
-        userRepository.deleteAll();
         userService.create(TestDataUtil.registeredUser());
     }
 
