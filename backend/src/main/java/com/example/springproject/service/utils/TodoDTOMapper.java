@@ -12,11 +12,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class TodoDTOMapper implements Function<Todo, TodoDTO> {
 
-    private final UserDTOMapper userDTOMapper;
-
     @Override
     public TodoDTO apply(Todo todo) {
-        return new TodoDTO(todo.getId(), todo.getName(), todo.getPriority(), todo.getStatus(), todo.getUntilDate(),
-                userDTOMapper.apply(todo.getUser()));
+        return new TodoDTO(todo.getName(), todo.getPriority(), todo.getStatus(), todo.getUntilDate());
     }
 }

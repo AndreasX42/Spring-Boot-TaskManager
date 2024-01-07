@@ -8,10 +8,9 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Object representing a user.")
 public record UserDTO(
 
-                Long id,
-                @NotNull String username,
-                String email,
-                Role role,
-                String password) {
+        @NotNull String username,
+        String email,
+        Role role,
+        String password) {
 
 }

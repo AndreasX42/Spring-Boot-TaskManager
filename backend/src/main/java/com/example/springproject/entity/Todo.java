@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,7 @@ public class Todo {
     @Column(nullable = false, unique = false)
     private String name;
 
-    @NotNull(message = "priority cannot be null")
+    @Nonnull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Priority priority;

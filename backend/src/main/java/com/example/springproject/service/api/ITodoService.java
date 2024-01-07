@@ -7,4 +7,6 @@ public interface ITodoService extends IService<Todo, TodoDTO> {
 
     Todo create(Long id, Todo todo);
 
+    Todo getByNameAndUserId(String name, Long userId);
+
 }

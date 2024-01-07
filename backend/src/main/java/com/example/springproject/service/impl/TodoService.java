@@ -26,9 +26,6 @@ public class TodoService implements ITodoService {
     public Todo getById(Long id) {
         Optional<Todo> todoOptional = todoRepository.findById(id);
 
-        Optional<Todo> x = Optional.ofNullable(null);
-        x.isPresent();
-
         return todoOptional.orElseThrow(() -> new EntityNotFoundException(id, Todo.class));
     }
 
@@ -56,6 +53,12 @@ public class TodoService implements ITodoService {
 
     public void delete(Long id) {
         todoRepository.deleteById(id);
+    }
+
+    @Override
+    public Todo getByNameAndUserId(String name, Long userId) {
+        return todoRepository.findByNameAndUser_Id(name, userId)
+                .orElseThrow(() -> new EntityNotFoundException(name, Todo.class));
     }
 
 }
