@@ -11,7 +11,7 @@ import com.example.springproject.exception.DuplicateEntityException;
 import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.UserRepository;
 import com.example.springproject.service.api.IUserService;
-import com.example.springproject.service.mappers.impl.UserMapper;
+import com.example.springproject.service.mapper.impl.UserMapper;
 
 import lombok.AllArgsConstructor;
 

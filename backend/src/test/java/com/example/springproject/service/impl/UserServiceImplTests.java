@@ -14,7 +14,7 @@ import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.User;
 import com.example.springproject.exception.DuplicateEntityException;
 import com.example.springproject.repository.UserRepository;
-import com.example.springproject.service.mappers.impl.UserMapper;
+import com.example.springproject.service.mapper.impl.UserMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

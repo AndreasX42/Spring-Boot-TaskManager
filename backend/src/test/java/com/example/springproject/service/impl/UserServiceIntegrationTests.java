@@ -19,7 +19,7 @@ import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.User;
 import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.UserRepository;
-import com.example.springproject.service.mappers.impl.UserMapper;
+import com.example.springproject.service.mapper.impl.UserMapper;
 
 @SpringBootTest
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)

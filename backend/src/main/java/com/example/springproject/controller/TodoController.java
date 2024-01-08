@@ -1,4 +1,4 @@
-package com.example.springproject.web;
+package com.example.springproject.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springproject.dto.TodoDto;
 import com.example.springproject.exception.ErrorResponse;
 import com.example.springproject.service.impl.TodoService;
-import com.example.springproject.service.mappers.impl.TodoMapper;
+import com.example.springproject.service.mapper.impl.TodoMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -97,6 +97,6 @@ public class TodoController {
     public ResponseEntity<HttpStatus> deleteTodo(@PathVariable Long userId, @PathVariable Long todoId) {
 
         todoService.delete(todoId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

@@ -1,11 +1,10 @@
-package com.example.springproject.service.mappers.impl;
+package com.example.springproject.service.mapper.impl;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.User;
-import com.example.springproject.service.mappers.IMapper;
+import com.example.springproject.service.mapper.IMapper;
 
 import lombok.AllArgsConstructor;
 

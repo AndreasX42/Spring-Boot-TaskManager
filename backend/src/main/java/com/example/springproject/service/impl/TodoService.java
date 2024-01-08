@@ -14,7 +14,7 @@ import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.TodoRepository;
 import com.example.springproject.service.api.ITodoService;
 import com.example.springproject.service.api.IUserService;
-import com.example.springproject.service.mappers.impl.TodoMapper;
+import com.example.springproject.service.mapper.impl.TodoMapper;
 
 import lombok.AllArgsConstructor;
 

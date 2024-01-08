@@ -1,4 +1,4 @@
-package com.example.springproject.service.mappers;
+package com.example.springproject.service.mapper;
 
 public interface IMapper<T, S> {
 
