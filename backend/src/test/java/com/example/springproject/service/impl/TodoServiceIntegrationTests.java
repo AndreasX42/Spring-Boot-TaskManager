@@ -1,7 +1,11 @@
 package com.example.springproject.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +14,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
 import com.example.springproject.TestDataUtil;
-import com.example.springproject.dto.TodoDTO;
+import com.example.springproject.dto.TodoDto;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.Todo;
 import com.example.springproject.entity.User;
 import com.example.springproject.repository.TodoRepository;
@@ -33,46 +38,83 @@ public class TodoServiceIntegrationTests {
 
     @BeforeEach
     public void setUp() {
-        User user = userService.create(TestDataUtil.getRegisteredUser());
-        todoService.create(user.getId(), TestDataUtil.getExistingTodoForRegisteredUser());
+        UserDto userDto = userService.create(TestDataUtil.getRegisteredUser());
+        todoService.create(userDto.id(), TestDataUtil.getExistingTodoForRegisteredUser());
     }
 
     @Test
     public void assertThatCreateTodoPasses() {
 
-        long numTodosBefore = todoRepository.count();
-        User user = userService.getByName(TestDataUtil.getRegisteredUser().getUsername());
-        Todo newTodo = TestDataUtil.getNewTodo();
+        User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+        TodoDto newTodoDto = TestDataUtil.getNewTodoDto();
 
-        newTodo = todoService.create(user.getId(), newTodo);
+        long numTodosBefore = todoRepository.count();
+        newTodoDto = todoService.create(user.getId(), newTodoDto);
         long numTodosAfter = todoRepository.count();
 
         assertEquals(1, numTodosAfter - numTodosBefore);
-        assertEquals(TestDataUtil.getNewTodo().getName(), newTodo.getName());
-        assertEquals(TestDataUtil.getNewTodo().getPriority(), newTodo.getPriority());
-        assertEquals(TestDataUtil.getNewTodo().getUntilDate(), newTodo.getUntilDate());
-        assertEquals(TestDataUtil.getNewTodo().getStatus(), Todo.Status.OPEN);
-        assertEquals(user.getId(), newTodo.getUser().getId());
-        assertNotNull(newTodo.getId());
+        assertEquals(TestDataUtil.getNewTodoDto().name(), newTodoDto.name());
+        assertEquals(TestDataUtil.getNewTodoDto().priority(), newTodoDto.priority());
+        assertEquals(TestDataUtil.getNewTodoDto().untilDate(), newTodoDto.untilDate());
+        assertEquals(TestDataUtil.getNewTodoDto().status(), Todo.Status.OPEN);
+        assertEquals(user.getId(), newTodoDto.userId());
 
     }
 
     @Test
     public void assertThatUpdateTodoPasses() {
 
-        User user = userService.getByName(TestDataUtil.getRegisteredUser().getUsername());
-        Todo oldTodo = todoService.getByNameAndUserId(TestDataUtil.getExistingTodoForRegisteredUser().getName(),
+        User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+        Todo oldTodo = todoService.getByNameAndUserId(TestDataUtil.getExistingTodoForRegisteredUser().name(),
                 user.getId());
 
-        TodoDTO updatedTodoDTO = TestDataUtil.getUpdatedTodoDTO();
+        TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(oldTodo.getId(), user.getId());
 
-        Todo updatedTodo = todoService.update(oldTodo.getId(), updatedTodoDTO);
+        TodoDto result = todoService.update(oldTodo.getId(), updatedTodoDto);
 
-        assertEquals(TestDataUtil.getUpdatedTodoDTO().name(), updatedTodo.getName());
-        assertEquals(TestDataUtil.getUpdatedTodoDTO().priority(), updatedTodo.getPriority());
-        assertEquals(TestDataUtil.getUpdatedTodoDTO().status(), updatedTodo.getStatus());
-        assertEquals(TestDataUtil.getUpdatedTodoDTO().untilDate(), updatedTodo.getUntilDate());
-        assertEquals(user.getId(), updatedTodo.getUser().getId());
+        assertEquals(updatedTodoDto.name(), result.name());
+        assertEquals(updatedTodoDto.priority(), result.priority());
+        assertEquals(updatedTodoDto.status(), result.status());
+        assertEquals(updatedTodoDto.untilDate(), result.untilDate());
+        assertEquals(user.getId(), result.userId());
+    }
+
+    @Test
+    public void assertThatDeleteTodoPasses() {
+
+        User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+        Todo todo = todoService.getByNameAndUserId(TestDataUtil.getExistingTodoForRegisteredUser().name(),
+                user.getId());
+
+        int numUserTodosBefore = todoService.getByUserId(user.getId()).size();
+        long numAllTodosBefore = todoRepository.count();
+        todoService.delete(todo.getId());
+        int numUserTodosAfter = todoService.getByUserId(user.getId()).size();
+        long numAllTodosAfter = todoRepository.count();
+
+        assertEquals(1, numAllTodosBefore - numAllTodosAfter);
+        assertEquals(1, numUserTodosBefore - numUserTodosAfter);
+    }
+
+    @Test
+    public void assertThatWithUserDeletionAlsoTodosAreDeleted() {
+
+        User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+        List<TodoDto> userTodoDtos = todoService.getByUserId(user.getId());
+
+        long numAllTodosBefore = todoRepository.count();
+        userService.delete(user.getId());
+        long numAllTodosAfter = todoRepository.count();
+        int numUserTodosAfter = todoService.getByUserId(user.getId()).size();
+
+        assertEquals(userTodoDtos.size(), numAllTodosBefore - numAllTodosAfter);
+        assertEquals(0, numUserTodosAfter);
+
+        List<Long> userTodoIds = userTodoDtos.stream().map(TodoDto::id).collect(Collectors.toList());
+        for (Long todoId : userTodoIds) {
+            assertTrue(todoRepository.findById(todoId).isEmpty());
+        }
+
     }
 
 }

@@ -1,4 +1,4 @@
-package com.example.springproject.security;
+package com.example.springproject.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.example.springproject.security.SecurityConstants;
 import com.example.springproject.security.filter.AuthenticationFilter;
 import com.example.springproject.security.filter.ExceptionHandlerFilter;
 import com.example.springproject.security.filter.JWTAuthorizationFilter;
@@ -20,7 +21,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Configuration
 @AllArgsConstructor
 @EnableMethodSecurity
-public class SecurityConfiguration {
+public class SecurityConfig {
 
         private AuthenticationManager authenticationManager;
         private IUserService userService;

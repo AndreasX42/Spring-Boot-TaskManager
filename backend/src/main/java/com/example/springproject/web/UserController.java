@@ -3,11 +3,10 @@ package com.example.springproject.web;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springproject.dto.UserDTO;
-import com.example.springproject.entity.User;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.exception.ErrorResponse;
 import com.example.springproject.service.api.IUserService;
-import com.example.springproject.service.utils.UserDTOMapper;
+import com.example.springproject.service.mappers.impl.UserMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -39,54 +38,53 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class UserController {
 
     private final IUserService userService;
-    private final UserDTOMapper userDTOMapper;
+    private final UserMapper userMapper;
 
     @Operation(summary = "Returns a user based on an ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "404", description = "User doesn't exist", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of user", content = @Content(schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of user", content = @Content(schema = @Schema(implementation = UserDto.class))),
     })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
 
-        User user = userService.getById(id);
-        return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.OK);
+        UserDto userDto = userMapper.mapFromEntity(userService.getById(id));
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
     @Operation(summary = "Retrieves paged list of users")
-    @ApiResponse(responseCode = "200", description = "Successful retrieval of all users", content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDTO.class))))
+    @ApiResponse(responseCode = "200", description = "Successful retrieval of all users", content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDto.class))))
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<UserDTO>> getAllTodos(Pageable pageable) {
+    public ResponseEntity<Page<UserDto>> getAllTodos(Pageable pageable) {
 
-        Page<User> todos = userService.getAll(pageable);
-        Page<UserDTO> response = todos.map(userDTOMapper);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        Page<UserDto> todos = userService.getAll(pageable);
+        return new ResponseEntity<>(todos, HttpStatus.OK);
     }
 
     @Operation(summary = "Creates a user from provided payload")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful creation of user", content = @Content(schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful creation of user", content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Bad request: unsuccessful submission", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDto> registerUser(@Valid @RequestBody UserDto userDto) {
 
-        User user = userService.create(new User(userDTO.username(), userDTO.email(), userDTO.password()));
-        return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.CREATED);
+        userDto = userService.create(userDto);
+        return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Updates a user from provided payload")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful update of user", content = @Content(schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful update of user", content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Bad request: unsuccessful submission", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#id == principal.id or hasAuthority('ADMIN')")
-    public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO,
+    public ResponseEntity<UserDto> updateUser(@Valid @RequestBody UserDto userDto,
             @PathVariable Long id) {
 
-        User user = userService.update(id, userDTO);
-        return new ResponseEntity<>(userDTOMapper.apply(user), HttpStatus.OK);
+        userDto = userService.update(id, userDto);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
     @Operation(summary = "Deletes user with given ID")

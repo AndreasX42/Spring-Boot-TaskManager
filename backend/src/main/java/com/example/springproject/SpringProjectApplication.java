@@ -3,7 +3,6 @@ package com.example.springproject;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 import com.example.springproject.entity.User;
 import com.example.springproject.repository.UserRepository;
 

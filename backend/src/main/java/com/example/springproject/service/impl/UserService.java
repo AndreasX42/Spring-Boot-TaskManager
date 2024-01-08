@@ -5,12 +5,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.springproject.dto.UserDTO;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.User;
 import com.example.springproject.exception.DuplicateEntityException;
 import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.UserRepository;
 import com.example.springproject.service.api.IUserService;
+import com.example.springproject.service.mappers.impl.UserMapper;
 
 import lombok.AllArgsConstructor;
 
@@ -22,6 +23,7 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserMapper userMapper;
 
     @Override
     public User getByName(String username) {
@@ -38,23 +40,25 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Page<User> getAll(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<UserDto> getAll(Pageable pageable) {
+        return userRepository.findAll(pageable).map(userMapper::mapFromEntity);
     }
 
     @Override
-    public User create(User user) {
+    public UserDto create(UserDto userDto) {
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new DuplicateEntityException("email", user.getEmail(), User.class);
+        if (userRepository.findByEmail(userDto.email()).isPresent()) {
+            throw new DuplicateEntityException("email", userDto.email(), User.class);
         }
 
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new DuplicateEntityException("username", user.getUsername(), User.class);
+        if (userRepository.findByUsername(userDto.username()).isPresent()) {
+            throw new DuplicateEntityException("username", userDto.username(), User.class);
         }
 
+        User user = userMapper.mapToEntity(userDto);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+
+        return userMapper.mapFromEntity(userRepository.save(user));
     }
 
     @Override
@@ -63,21 +67,20 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User update(Long id, UserDTO userDTO) {
+    public UserDto update(Long id, UserDto userDto) {
+
         User user = getById(id);
 
-        if (!userDTO.email().equals(user.getEmail()) && userRepository.findByEmail(userDTO.email()).isPresent()) {
-            throw new DuplicateEntityException("email", userDTO.email(), User.class);
+        if (!userDto.email().equals(user.getEmail()) && userRepository.findByEmail(userDto.email()).isPresent()) {
+            throw new DuplicateEntityException("email", userDto.email(), User.class);
         }
 
-        user.setEmail(userDTO.email());
-
-        if (userDTO.password() != null
-                && !bCryptPasswordEncoder.encode(userDTO.password()).equals(user.getPassword())) {
-            user.setPassword(bCryptPasswordEncoder.encode(userDTO.password()));
+        if (userDto.password() != null) {
+            user.setPassword(bCryptPasswordEncoder.encode(userDto.password()));
         }
 
-        return userRepository.save(user);
+        user.setEmail(userDto.email());
+        return userMapper.mapFromEntity(userRepository.save(user));
 
     }
 

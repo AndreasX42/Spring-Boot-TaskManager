@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nonnull;
 
 @Schema(description = "Object representing a todo.")
-public record TodoDTO(
+public record TodoDto(
 
-                @Nonnull String name,
-                Priority priority,
-                Status status,
-                LocalDate untilDate) {
+        Long id,
+        Long userId,
+        @Nonnull String name,
+        @Nonnull Priority priority,
+        @Nonnull Status status,
+        @Nonnull LocalDate untilDate) {
 
 }

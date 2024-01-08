@@ -1,11 +1,11 @@
 package com.example.springproject.service.api;
 
-import com.example.springproject.dto.UserDTO;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.User;
 
-public interface IUserService extends IService<User, UserDTO> {
+public interface IUserService extends IService<User, UserDto> {
 
-    User create(User user);
+    UserDto create(UserDto userDto);
 
     User getByName(String username);
 

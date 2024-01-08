@@ -2,17 +2,19 @@ package com.example.springproject.service.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.example.springproject.dto.TodoDTO;
+import com.example.springproject.dto.TodoDto;
 import com.example.springproject.entity.Todo;
 import com.example.springproject.entity.User;
 import com.example.springproject.exception.EntityNotFoundException;
 import com.example.springproject.repository.TodoRepository;
 import com.example.springproject.service.api.ITodoService;
 import com.example.springproject.service.api.IUserService;
+import com.example.springproject.service.mappers.impl.TodoMapper;
 
 import lombok.AllArgsConstructor;
 
@@ -22,32 +24,34 @@ public class TodoService implements ITodoService {
 
     private final TodoRepository todoRepository;
     private final IUserService userService;
+    private final TodoMapper todoMapper;
 
     public Todo getById(Long id) {
         Optional<Todo> todoOptional = todoRepository.findById(id);
-
         return todoOptional.orElseThrow(() -> new EntityNotFoundException(id, Todo.class));
     }
 
-    public Page<Todo> getAll(Pageable pageable) {
-        return todoRepository.findAll(pageable);
+    public Page<TodoDto> getAll(Pageable pageable) {
+        return todoRepository.findAll(pageable).map(todoMapper::mapFromEntity);
     }
 
-    public Todo create(Long userId, Todo todo) {
+    public TodoDto create(Long userId, TodoDto todoDto) {
         User user = userService.getById(userId);
+        Todo todo = todoMapper.mapToEntity(todoDto);
+
         todo.setUser(user);
-        return todoRepository.save(todo);
+        return todoMapper.mapFromEntity(todoRepository.save(todo));
     }
 
-    public Todo update(Long id, TodoDTO todoDTO) {
+    public TodoDto update(Long id, TodoDto todoDto) {
 
         Todo todoDb = getById(id);
-        todoDb.setName(todoDTO.name());
-        todoDb.setPriority(todoDTO.priority());
-        todoDb.setStatus(todoDTO.status());
-        todoDb.setUntilDate(todoDTO.untilDate());
+        todoDb.setName(todoDto.name());
+        todoDb.setPriority(todoDto.priority());
+        todoDb.setStatus(todoDto.status());
+        todoDb.setUntilDate(todoDto.untilDate());
 
-        return todoRepository.save(todoDb);
+        return todoMapper.mapFromEntity(todoRepository.save(todoDb));
 
     }
 
@@ -59,6 +63,12 @@ public class TodoService implements ITodoService {
     public Todo getByNameAndUserId(String name, Long userId) {
         return todoRepository.findByNameAndUser_Id(name, userId)
                 .orElseThrow(() -> new EntityNotFoundException(name, Todo.class));
+    }
+
+    @Override
+    public List<TodoDto> getByUserId(Long userId) {
+        return todoRepository.findByUser_Id(userId).stream().map(todoMapper::mapFromEntity)
+                .collect(Collectors.toList());
     }
 
 }

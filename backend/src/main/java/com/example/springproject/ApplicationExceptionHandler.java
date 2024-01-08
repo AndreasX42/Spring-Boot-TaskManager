@@ -30,11 +30,6 @@ import jakarta.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
-        @Bean
-        public BCryptPasswordEncoder bCryptPasswordEncoder() {
-                return new BCryptPasswordEncoder();
-        }
-
         @ExceptionHandler({ EntityNotFoundException.class })
         public ResponseEntity<ErrorResponse> handleResourceNotFoundException(EntityNotFoundException ex,
                         HttpServletRequest request) {

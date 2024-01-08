@@ -1,12 +1,16 @@
 package com.example.springproject.service.api;
 
-import com.example.springproject.dto.TodoDTO;
+import java.util.List;
+
+import com.example.springproject.dto.TodoDto;
 import com.example.springproject.entity.Todo;
 
-public interface ITodoService extends IService<Todo, TodoDTO> {
+public interface ITodoService extends IService<Todo, TodoDto> {
 
-    Todo create(Long id, Todo todo);
+    TodoDto create(Long id, TodoDto todo);
 
     Todo getByNameAndUserId(String name, Long userId);
+
+    List<TodoDto> getByUserId(Long userId);
 
 }

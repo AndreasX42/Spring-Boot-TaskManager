@@ -2,55 +2,55 @@ package com.example.springproject;
 
 import java.time.LocalDate;
 
-import com.example.springproject.dto.TodoDTO;
-import com.example.springproject.dto.UserDTO;
+import com.example.springproject.dto.TodoDto;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.entity.Todo;
 import com.example.springproject.entity.User;
 
 public final class TestDataUtil {
 
-    private final static User registeredUser = new User("Jane Doe", "Jane.doe@gmail.com", "pw123");
+    private final static UserDto registeredUser = new UserDto(null, "Jane Doe", "Jane.doe@gmail.com", User.Role.USER,
+            "pw123");
 
-    private final static User newUser = new User("John Doe", "john.doe@gmail.com", "pw123");
+    private final static UserDto newUserDto = new UserDto(null, "John Doe", "john.doe@gmail.com", User.Role.USER,
+            "pw123");
 
-    private final static UserDTO updatedRegisteredUserDTO = new UserDTO(getRegisteredUser().getUsername(),
-            "new_address@gmail.com",
-            getRegisteredUser().getRole(),
-            "new_password");
+    private final static TodoDto newTodoDto = new TodoDto(null, null, "my_todo", Todo.Priority.LOW, Todo.Status.OPEN,
+            LocalDate.of(2024, 04, 29));
 
-    private final static Todo newTodo = new Todo("my_todo", Todo.Priority.LOW, LocalDate.of(2024, 04, 29));
-
-    private final static TodoDTO updatedTodoDTO = new TodoDTO("my_updated_todo", Todo.Priority.HIGH,
-            Todo.Status.FINISHED, LocalDate.of(2024, 03, 13));
-
-    private final static Todo existingTodoForRegisteredUser = new Todo("my_old_todo", Todo.Priority.MID,
-            LocalDate.of(2024, 03, 9));
+    private final static TodoDto existingTodoForRegisteredUser = new TodoDto(null, null, "my_old_todo",
+            Todo.Priority.MID,
+            Todo.Status.OPEN, LocalDate.of(2024, 03, 9));
 
     private TestDataUtil() {
     }
 
-    public static User getRegisteredUser() {
+    public static UserDto getRegisteredUser() {
         return registeredUser;
     }
 
-    public static User getNewUser() {
-        return newUser;
+    public static UserDto getNewUserDto() {
+        return newUserDto;
     }
 
-    public static UserDTO getUpdatedRegisteredUserDTO() {
-        return updatedRegisteredUserDTO;
+    public static UserDto getUpdatedRegisteredUserDto(Long id) {
+        return new UserDto(id, getRegisteredUser().username(),
+                "new_address@gmail.com",
+                getRegisteredUser().role(),
+                "new_password");
     }
 
-    public static Todo getNewTodo() {
-        return newTodo;
+    public static TodoDto getNewTodoDto() {
+        return newTodoDto;
     }
 
-    public static TodoDTO getUpdatedTodoDTO() {
-        return updatedTodoDTO;
+    public static TodoDto getUpdatedTodoDto(Long todoId, Long userId) {
+        return new TodoDto(todoId, userId, "my_updated_todo", Todo.Priority.HIGH,
+                Todo.Status.FINISHED, LocalDate.of(2024, 03, 13));
 
     }
 
-    public static Todo getExistingTodoForRegisteredUser() {
+    public static TodoDto getExistingTodoForRegisteredUser() {
         return existingTodoForRegisteredUser;
     }
 }

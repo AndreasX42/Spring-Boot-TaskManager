@@ -3,11 +3,10 @@ package com.example.springproject.web;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springproject.dto.TodoDTO;
-import com.example.springproject.entity.Todo;
+import com.example.springproject.dto.TodoDto;
 import com.example.springproject.exception.ErrorResponse;
 import com.example.springproject.service.impl.TodoService;
-import com.example.springproject.service.utils.TodoDTOMapper;
+import com.example.springproject.service.mappers.impl.TodoMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -38,55 +37,54 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class TodoController {
 
     private final TodoService todoService;
-    private final TodoDTOMapper todoDTOMapper;
+    private final TodoMapper todoMapper;
 
     @GetMapping(value = "/{todoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Returns a todo based on provided todo ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "404", description = "Todo doesn't exist", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of todo", content = @Content(schema = @Schema(implementation = TodoDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of todo", content = @Content(schema = @Schema(implementation = TodoDto.class))),
     })
-    public ResponseEntity<TodoDTO> getTodoById(@PathVariable Long todoId) {
+    public ResponseEntity<TodoDto> getTodoById(@PathVariable Long todoId) {
 
-        Todo todo = todoService.getById(todoId);
-        return new ResponseEntity<>(todoDTOMapper.apply(todo), HttpStatus.OK);
+        TodoDto todoDto = todoMapper.mapFromEntity(todoService.getById(todoId));
+        return new ResponseEntity<>(todoDto, HttpStatus.OK);
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retrieves paged list of todos")
-    @ApiResponse(responseCode = "200", description = "Successful retrieval of all todos", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TodoDTO.class))))
-    public ResponseEntity<Page<TodoDTO>> getAllTodos(Pageable pageable) {
+    @ApiResponse(responseCode = "200", description = "Successful retrieval of all todos", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TodoDto.class))))
+    public ResponseEntity<Page<TodoDto>> getAllTodos(Pageable pageable) {
 
-        Page<Todo> todos = todoService.getAll(pageable);
-        Page<TodoDTO> response = todos.map(todoDTOMapper);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        Page<TodoDto> todos = todoService.getAll(pageable);
+        return new ResponseEntity<>(todos, HttpStatus.OK);
     }
 
     @PostMapping(value = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#userId == principal.id or hasAuthority('ADMIN')")
     @Operation(summary = "Creates a todo from provided payload")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful creation of todo", content = @Content(schema = @Schema(implementation = TodoDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful creation of todo", content = @Content(schema = @Schema(implementation = TodoDto.class))),
             @ApiResponse(responseCode = "400", description = "Bad request: unsuccessful submission", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<TodoDTO> createTodo(@PathVariable Long userId, @RequestBody Todo todo) {
+    public ResponseEntity<TodoDto> createTodo(@PathVariable Long userId, @RequestBody TodoDto todoDto) {
 
-        todo = todoService.create(userId, todo);
-        return new ResponseEntity<>(todoDTOMapper.apply(todo), HttpStatus.CREATED);
+        todoDto = todoService.create(userId, todoDto);
+        return new ResponseEntity<>(todoDto, HttpStatus.CREATED);
     }
 
     @PutMapping(value = "/user/{userId}/todo/{todoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#userId == principal.id or hasAuthority('ADMIN')")
     @Operation(summary = "Updates a todo by user and todo IDs and provided payload")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful update of todo", content = @Content(schema = @Schema(implementation = TodoDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Successful update of todo", content = @Content(schema = @Schema(implementation = TodoDto.class))),
             @ApiResponse(responseCode = "400", description = "Bad request: unsuccessful submission", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<TodoDTO> updateTodo(@PathVariable Long userId, @PathVariable Long todoId,
-            @RequestBody TodoDTO todoDTO) {
+    public ResponseEntity<TodoDto> updateTodo(@PathVariable Long userId, @PathVariable Long todoId,
+            @RequestBody TodoDto todoDto) {
 
-        Todo todo = todoService.update(todoId, todoDTO);
-        return new ResponseEntity<>(todoDTOMapper.apply(todo), HttpStatus.OK);
+        todoDto = todoService.update(todoId, todoDto);
+        return new ResponseEntity<>(todoDto, HttpStatus.OK);
     }
 
     @DeleteMapping("/user/{userId}/todo/{todoId}")
