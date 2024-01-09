@@ -71,4 +71,8 @@ public class TodoService implements ITodoService {
                 .collect(Collectors.toList());
     }
 
+    public Page<TodoDto> getAllByUserId(Long userId, Pageable pageable) {
+        return todoRepository.findAllByUser_Id(userId, pageable).map(todoMapper::mapFromEntity);
+    }
+
 }

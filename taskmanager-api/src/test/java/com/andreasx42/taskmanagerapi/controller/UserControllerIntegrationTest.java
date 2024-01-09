@@ -3,18 +3,12 @@ package com.andreasx42.taskmanagerapi.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Collections;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +21,6 @@ import com.andreasx42.taskmanagerapi.entity.User;
 import com.andreasx42.taskmanagerapi.exception.EntityNotFoundException;
 import com.andreasx42.taskmanagerapi.repository.UserRepository;
 import com.andreasx42.taskmanagerapi.security.SecurityConstants;
-import com.andreasx42.taskmanagerapi.security.manager.CustomUserDetails;
 import com.andreasx42.taskmanagerapi.service.impl.UserService;
 import com.andreasx42.taskmanagerapi.service.mapper.impl.UserMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,15 +53,7 @@ public class UserControllerIntegrationTest {
                 UserDto userDto = userService.create(TestDataUtil.getRegisteredUser());
 
                 // Set authentication for user
-                Set<SimpleGrantedAuthority> authority = Collections
-                                .singleton(new SimpleGrantedAuthority(userDto.role().toString()));
-
-                org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(userDto.id(),
-                                userDto.username(), " ",
-                                authority);
-
-                Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, authority);
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                TestDataUtil.setAuthenticationContext(userDto, userDto.role());
 
         }
 
@@ -155,15 +140,7 @@ public class UserControllerIntegrationTest {
                 UserDto adminDto = TestDataUtil.getNewUserDto();
                 adminDto = userService.create(adminDto);
 
-                Set<SimpleGrantedAuthority> authority = Collections
-                                .singleton(new SimpleGrantedAuthority(User.Role.ADMIN.toString()));
-
-                org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(adminDto.id(),
-                                adminDto.username(), " ",
-                                authority);
-
-                Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, authority);
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                TestDataUtil.setAuthenticationContext(adminDto, User.Role.ADMIN);
 
                 // test admin priviliges
                 User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
@@ -182,18 +159,10 @@ public class UserControllerIntegrationTest {
         public void testUserNotAllowedToDeleteOthers() throws Exception {
 
                 // create new user with normal user priviliges
-                UserDto newUser = TestDataUtil.getNewUserDto();
-                newUser = userService.create(newUser);
+                UserDto newUserDto = TestDataUtil.getNewUserDto();
+                newUserDto = userService.create(newUserDto);
 
-                Set<SimpleGrantedAuthority> authority = Collections
-                                .singleton(new SimpleGrantedAuthority(User.Role.USER.toString()));
-
-                org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(newUser.id(),
-                                newUser.username(), " ",
-                                authority);
-
-                Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, authority);
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
 
                 // test user priviliges
                 User user = userService.getByName(TestDataUtil.getRegisteredUser().username());

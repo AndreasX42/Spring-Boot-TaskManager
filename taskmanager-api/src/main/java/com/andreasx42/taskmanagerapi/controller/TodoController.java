@@ -39,6 +39,7 @@ public class TodoController {
     private final TodoService todoService;
     private final TodoMapper todoMapper;
 
+    // GET todo by todoid
     @GetMapping(value = "/{todoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Returns a todo based on provided todo ID")
     @ApiResponses(value = {
@@ -51,6 +52,17 @@ public class TodoController {
         return new ResponseEntity<>(todoDto, HttpStatus.OK);
     }
 
+    // GET all todos by userid
+    @GetMapping(value = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Retrieves paged list of todos of user")
+    @ApiResponse(responseCode = "200", description = "Successful retrieval of all todos of user", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TodoDto.class))))
+    public ResponseEntity<Page<TodoDto>> getAllTodosOfUser(@PathVariable Long userId, Pageable pageable) {
+
+        Page<TodoDto> todos = todoService.getAllByUserId(userId, pageable);
+        return new ResponseEntity<>(todos, HttpStatus.OK);
+    }
+
+    // GET all todos
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retrieves paged list of todos")
     @ApiResponse(responseCode = "200", description = "Successful retrieval of all todos", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TodoDto.class))))
@@ -60,6 +72,7 @@ public class TodoController {
         return new ResponseEntity<>(todos, HttpStatus.OK);
     }
 
+    // CREATE todo by userid
     @PostMapping(value = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#userId == principal.id or hasAuthority('ADMIN')")
     @Operation(summary = "Creates a todo from provided payload")
@@ -73,6 +86,7 @@ public class TodoController {
         return new ResponseEntity<>(todoDto, HttpStatus.CREATED);
     }
 
+    // UPDATE todo by userid and todoid
     @PutMapping(value = "/user/{userId}/todo/{todoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#userId == principal.id or hasAuthority('ADMIN')")
     @Operation(summary = "Updates a todo by user and todo IDs and provided payload")
@@ -87,6 +101,7 @@ public class TodoController {
         return new ResponseEntity<>(todoDto, HttpStatus.OK);
     }
 
+    // DELETE todo by userid and todoid
     @DeleteMapping("/user/{userId}/todo/{todoId}")
     @PreAuthorize("#userId == principal.id or hasAuthority('ADMIN')")
     @Operation(summary = "Deletes todo with given user and todo IDs")

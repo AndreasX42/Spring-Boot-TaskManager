@@ -46,18 +46,18 @@ public class TodoServiceIntegrationTests {
     public void assertThatCreateTodoPasses() {
 
         User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-        TodoDto newTodoDto = TestDataUtil.getNewTodoDto();
+        TodoDto newTodoDto = TestDataUtil.getNewTodoDto(user.getId());
 
         long numTodosBefore = todoRepository.count();
-        newTodoDto = todoService.create(user.getId(), newTodoDto);
+        TodoDto resultTodoDto = todoService.create(user.getId(), newTodoDto);
         long numTodosAfter = todoRepository.count();
 
         assertEquals(1, numTodosAfter - numTodosBefore);
-        assertEquals(TestDataUtil.getNewTodoDto().name(), newTodoDto.name());
-        assertEquals(TestDataUtil.getNewTodoDto().priority(), newTodoDto.priority());
-        assertEquals(TestDataUtil.getNewTodoDto().untilDate(), newTodoDto.untilDate());
-        assertEquals(TestDataUtil.getNewTodoDto().status(), Todo.Status.OPEN);
-        assertEquals(user.getId(), newTodoDto.userId());
+        assertEquals(newTodoDto.name(), resultTodoDto.name());
+        assertEquals(newTodoDto.priority(), resultTodoDto.priority());
+        assertEquals(newTodoDto.untilDate(), resultTodoDto.untilDate());
+        assertEquals(newTodoDto.status(), Todo.Status.OPEN);
+        assertEquals(newTodoDto.userId(), resultTodoDto.userId());
 
     }
 

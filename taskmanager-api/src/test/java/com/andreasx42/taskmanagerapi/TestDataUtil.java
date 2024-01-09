@@ -1,11 +1,19 @@
 package com.andreasx42.taskmanagerapi;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Set;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.andreasx42.taskmanagerapi.dto.TodoDto;
 import com.andreasx42.taskmanagerapi.dto.UserDto;
 import com.andreasx42.taskmanagerapi.entity.Todo;
 import com.andreasx42.taskmanagerapi.entity.User;
+import com.andreasx42.taskmanagerapi.security.manager.CustomUserDetails;
 
 public final class TestDataUtil {
 
@@ -14,9 +22,6 @@ public final class TestDataUtil {
 
     private final static UserDto newUserDto = new UserDto(null, "John Doe", "john.doe@gmail.com", User.Role.USER,
             "pw123");
-
-    private final static TodoDto newTodoDto = new TodoDto(null, null, "my_todo", Todo.Priority.LOW, Todo.Status.OPEN,
-            LocalDate.of(2024, 04, 29));
 
     private final static TodoDto existingTodoForRegisteredUser = new TodoDto(null, null, "my_old_todo",
             Todo.Priority.MID,
@@ -40,8 +45,9 @@ public final class TestDataUtil {
                 "new_password");
     }
 
-    public static TodoDto getNewTodoDto() {
-        return newTodoDto;
+    public static TodoDto getNewTodoDto(Long userId) {
+        return new TodoDto(null, userId, "my_todo", Todo.Priority.LOW, Todo.Status.OPEN,
+                LocalDate.of(2024, 04, 29));
     }
 
     public static TodoDto getUpdatedTodoDto(Long todoId, Long userId) {
@@ -53,4 +59,16 @@ public final class TestDataUtil {
     public static TodoDto getExistingTodoForRegisteredUser() {
         return existingTodoForRegisteredUser;
     }
+
+    public static void setAuthenticationContext(UserDto userDto, User.Role role) {
+        Set<SimpleGrantedAuthority> authority = Collections
+                .singleton(new SimpleGrantedAuthority(role.toString()));
+
+        org.springframework.security.core.userdetails.User userDetails = new CustomUserDetails(userDto.id(),
+                userDto.username(), " ", authority);
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, authority);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
 }
