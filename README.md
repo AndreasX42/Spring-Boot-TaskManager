@@ -20,4 +20,4 @@ It consists of a frontend built with React and a backend developed in Java 17 us
 # 🛠️ Development
 
 - `/react-frontend`: Contains the React frontend components and resources.
-- `/backend`: Contains the Java Spring Boot application for managing tasks.
+- `/taskmanager-api`: Contains the Java Spring Boot application for managing tasks.
