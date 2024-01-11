@@ -38,9 +38,7 @@ public class UserControllerIntegrationTest {
 
         @Autowired
         public UserControllerIntegrationTest(UserService userService, UserRepository userRepository,
-                        UserMapper userMapper,
-                        ObjectMapper objectMapper,
-                        MockMvc mockMvc) {
+                        UserMapper userMapper, ObjectMapper objectMapper, MockMvc mockMvc) {
                 this.userService = userService;
                 this.userRepository = userRepository;
                 this.userMapper = userMapper;
@@ -63,15 +61,16 @@ public class UserControllerIntegrationTest {
                 UserDto userDto = TestDataUtil.getNewUserDto();
                 String userDtoJson = objectMapper.writeValueAsString(userDto);
 
-                mockMvc.perform(
-                                MockMvcRequestBuilders.post(SecurityConstants.REGISTER_PATH)
-                                                .contentType(MediaType.APPLICATION_JSON)
-                                                .content(userDtoJson))
+                mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.REGISTER_PATH)
+                                .contentType(MediaType.APPLICATION_JSON).content(userDtoJson))
                                 .andExpect(MockMvcResultMatchers.status().isCreated())
                                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").isNumber())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(userDto.username()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(userDto.email()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.role").value(userDto.role().toString()));
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.username")
+                                                .value(userDto.username()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+                                                .value(userDto.email()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.role")
+                                                .value(userDto.role().toString()));
 
         }
 
@@ -82,10 +81,14 @@ public class UserControllerIntegrationTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", user.getId()))
                                 .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(user.getId()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(user.getUsername()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(user.getEmail()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.role").value(user.getRole().toString()));
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
+                                                .value(user.getId()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.username")
+                                                .value(user.getUsername()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+                                                .value(user.getEmail()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.role")
+                                                .value(user.getRole().toString()));
         }
 
         @Test
@@ -95,10 +98,12 @@ public class UserControllerIntegrationTest {
 
                 mockMvc.perform(MockMvcRequestBuilders.get("/users/all").param("sort", "id,desc"))
                                 .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id").value(user.getId()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id")
+                                                .value(user.getId()))
                                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].username")
                                                 .value(user.getUsername()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email").value(user.getEmail()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email")
+                                                .value(user.getEmail()))
                                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].role")
                                                 .value(user.getRole().toString()));
         }
@@ -114,10 +119,12 @@ public class UserControllerIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(updatedUserDtoJson))
                                 .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(user.getId()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
+                                                .value(user.getId()))
                                 .andExpect(MockMvcResultMatchers.jsonPath("$.username")
                                                 .value(updatedUserDto.username()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(updatedUserDto.email()))
+                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+                                                .value(updatedUserDto.email()))
                                 .andExpect(MockMvcResultMatchers.jsonPath("$.role")
                                                 .value(updatedUserDto.role().toString()));
         }
@@ -130,7 +137,8 @@ public class UserControllerIntegrationTest {
                 mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId()))
                                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
-                assertThrows(EntityNotFoundException.class, () -> userService.getById(user.getId()));
+                assertThrows(EntityNotFoundException.class,
+                                () -> userService.getById(user.getId()));
         }
 
         @Test
@@ -150,7 +158,8 @@ public class UserControllerIntegrationTest {
                                 .andExpect(MockMvcResultMatchers.status().isNoContent());
                 long numUsersAfter = userRepository.count();
 
-                assertThrows(EntityNotFoundException.class, () -> userService.getById(user.getId()));
+                assertThrows(EntityNotFoundException.class,
+                                () -> userService.getById(user.getId()));
                 assertEquals(1, numUsersBefore - numUsersAfter);
 
         }

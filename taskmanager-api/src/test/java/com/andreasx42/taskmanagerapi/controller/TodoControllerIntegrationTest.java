@@ -43,9 +43,7 @@ public class TodoControllerIntegrationTest {
 
         @Autowired
         public TodoControllerIntegrationTest(TodoService todoService, TodoRepository todoRepository,
-                        TodoMapper todoMapper,
-                        ObjectMapper objectMapper,
-                        UserService userService, MockMvc mockMvc) {
+                        TodoMapper todoMapper, ObjectMapper objectMapper, UserService userService, MockMvc mockMvc) {
                 this.todoService = todoService;
                 this.todoRepository = todoRepository;
                 this.todoMapper = todoMapper;
@@ -70,8 +68,7 @@ public class TodoControllerIntegrationTest {
                 TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
 
                 MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/{todoId}", todoDto.id()))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andReturn();
+                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
                 String content = result.getResponse().getContentAsString();
                 TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
@@ -86,12 +83,10 @@ public class TodoControllerIntegrationTest {
                 User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
                 TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/user/{userId}", user.getId())
-                                .param("page", "0")
-                                .param("size", "1")
-                                .param("sort", "id,desc"))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andReturn();
+                MvcResult result = mockMvc
+                                .perform(MockMvcRequestBuilders.get("/todos/user/{userId}", user.getId())
+                                                .param("page", "0").param("size", "1").param("sort", "id,desc"))
+                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
                 TodoDto firstResultTodoDto = extractTodoDtoFromResult(result);
                 assertTodoDtoValues(todoDto, firstResultTodoDto);
@@ -103,12 +98,10 @@ public class TodoControllerIntegrationTest {
                 User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
                 TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/all")
-                                .param("page", "0")
-                                .param("size", "1")
-                                .param("sort", "id,desc"))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andReturn();
+                MvcResult result = mockMvc
+                                .perform(MockMvcRequestBuilders.get("/todos/all").param("page", "0").param("size", "1")
+                                                .param("sort", "id,desc"))
+                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
                 TodoDto firstResultTodoDto = extractTodoDtoFromResult(result);
                 assertTodoDtoValues(todoDto, firstResultTodoDto);
@@ -121,11 +114,10 @@ public class TodoControllerIntegrationTest {
                 TodoDto newTodoDto = TestDataUtil.getNewTodoDto(user.getId());
                 String newTodoDtoJson = objectMapper.writeValueAsString(newTodoDto);
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/todos/user/{userId}", user.getId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(newTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isCreated())
-                                .andReturn();
+                MvcResult result = mockMvc
+                                .perform(MockMvcRequestBuilders.post("/todos/user/{userId}", user.getId())
+                                                .contentType(MediaType.APPLICATION_JSON).content(newTodoDtoJson))
+                                .andExpect(MockMvcResultMatchers.status().isCreated()).andReturn();
 
                 String content = result.getResponse().getContentAsString();
                 TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
@@ -142,12 +134,12 @@ public class TodoControllerIntegrationTest {
                 TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(oldTodoDto.id(), user.getId());
                 String updatedTodoDtoJson = objectMapper.writeValueAsString(updatedTodoDto);
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                                .put("/todos/user/{userId}/todo/{todoId}", user.getId(), oldTodoDto.id())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(updatedTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andReturn();
+                MvcResult result = mockMvc
+                                .perform(MockMvcRequestBuilders
+                                                .put("/todos/user/{userId}/todo/{todoId}", user.getId(),
+                                                                oldTodoDto.id())
+                                                .contentType(MediaType.APPLICATION_JSON).content(updatedTodoDtoJson))
+                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
                 String content = result.getResponse().getContentAsString();
                 TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
@@ -163,10 +155,8 @@ public class TodoControllerIntegrationTest {
                 TodoDto userTodo = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
 
                 long numTodosBefore = todoRepository.count();
-                mockMvc.perform(
-                                MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", user.getId(),
-                                                userTodo.id()))
-                                .andExpect(MockMvcResultMatchers.status().isNoContent());
+                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", user.getId(),
+                                userTodo.id())).andExpect(MockMvcResultMatchers.status().isNoContent());
                 long numTodosAfter = todoRepository.count();
 
                 assertEquals(1, numTodosBefore - numTodosAfter);
@@ -186,8 +176,7 @@ public class TodoControllerIntegrationTest {
                 TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
 
                 mockMvc.perform(MockMvcRequestBuilders.post("/todos/user/{userId}", oldUser.getId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(newTodoDtoJson))
+                                .contentType(MediaType.APPLICATION_JSON).content(newTodoDtoJson))
                                 .andExpect(MockMvcResultMatchers.status().isForbidden());
         }
 
@@ -204,12 +193,9 @@ public class TodoControllerIntegrationTest {
                 // set authentication context for new user and create a new todo for old user
                 TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
 
-                mockMvc.perform(
-                                MockMvcRequestBuilders
-                                                .put("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
-                                                                oldUserTodo.id())
-                                                .contentType(MediaType.APPLICATION_JSON)
-                                                .content(updatedTodoDtoJson))
+                mockMvc.perform(MockMvcRequestBuilders
+                                .put("/todos/user/{userId}/todo/{todoId}", oldUser.getId(), oldUserTodo.id())
+                                .contentType(MediaType.APPLICATION_JSON).content(updatedTodoDtoJson))
                                 .andExpect(MockMvcResultMatchers.status().isForbidden());
         }
 
@@ -224,10 +210,8 @@ public class TodoControllerIntegrationTest {
                 // set authentication context for new user and create a new todo for old user
                 TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
 
-                mockMvc.perform(
-                                MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
-                                                oldUserTodo.id()))
-                                .andExpect(MockMvcResultMatchers.status().isForbidden());
+                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
+                                oldUserTodo.id())).andExpect(MockMvcResultMatchers.status().isForbidden());
 
         }
 
@@ -243,10 +227,8 @@ public class TodoControllerIntegrationTest {
                 TestDataUtil.setAuthenticationContext(newUserDto, User.Role.ADMIN);
 
                 long numTodosBefore = todoRepository.count();
-                mockMvc.perform(
-                                MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
-                                                oldUserTodo.id()))
-                                .andExpect(MockMvcResultMatchers.status().isNoContent());
+                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
+                                oldUserTodo.id())).andExpect(MockMvcResultMatchers.status().isNoContent());
                 long numTodosAfter = todoRepository.count();
 
                 assertEquals(1, numTodosBefore - numTodosAfter);
@@ -256,7 +238,8 @@ public class TodoControllerIntegrationTest {
         private TodoDto extractTodoDtoFromResult(MvcResult result) throws Exception {
 
                 String content = result.getResponse().getContentAsString();
-                JsonNode rootNode = objectMapper.readTree(content); // Parse JSON into a tree structure
+                JsonNode rootNode = objectMapper.readTree(content); // Parse JSON into a tree
+                                                                    // structure
 
                 // Get the 'content' node which holds the array of TodoDto
                 JsonNode contentNode = rootNode.get("content");
