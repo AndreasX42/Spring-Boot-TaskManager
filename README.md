@@ -5,8 +5,8 @@ It consists of a frontend built with React and a backend developed in Java 17 us
 
 `Language` [Java 17](https://openjdk.org/projects/jdk/17/)\
 `Framework for API` [Spring Boot 3](https://spring.io/projects/spring-boot)\
+`Frontend` [Vite](https://vitejs.dev/) [React](https://reactjs.org/) [TypeScript](https://www.typescriptlang.org/)\
 `Databases` [Postgres](https://www.postgresql.org/)\
-`Frontend` [React](https://reactjs.org/)\
 `CI/CD` TBA
 
 # 🚀 Features & Functionalities
