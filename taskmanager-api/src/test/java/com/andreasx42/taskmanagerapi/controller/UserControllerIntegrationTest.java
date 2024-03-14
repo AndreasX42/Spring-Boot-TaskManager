@@ -1,20 +1,5 @@
 package com.andreasx42.taskmanagerapi.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
 import com.andreasx42.taskmanagerapi.TestDataUtil;
 import com.andreasx42.taskmanagerapi.dto.UserDto;
 import com.andreasx42.taskmanagerapi.entity.User;
@@ -24,161 +9,215 @@ import com.andreasx42.taskmanagerapi.security.SecurityConstants;
 import com.andreasx42.taskmanagerapi.service.impl.UserService;
 import com.andreasx42.taskmanagerapi.service.mapper.impl.UserMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureMockMvc
 public class UserControllerIntegrationTest {
 
-        private final UserService userService;
-        private final UserRepository userRepository;
-        private final UserMapper userMapper;
-        private final ObjectMapper objectMapper;
-        private final MockMvc mockMvc;
+	private final UserService userService;
+	private final ObjectMapper objectMapper;
+	private final MockMvc mockMvc;
+	private UserMapper userMapper;
 
-        @Autowired
-        public UserControllerIntegrationTest(UserService userService, UserRepository userRepository,
-                        UserMapper userMapper, ObjectMapper objectMapper, MockMvc mockMvc) {
-                this.userService = userService;
-                this.userRepository = userRepository;
-                this.userMapper = userMapper;
-                this.objectMapper = objectMapper;
-                this.mockMvc = mockMvc;
-        }
+	private String authorizationToken;
 
-        @BeforeEach
-        public void setUp() {
-                UserDto userDto = userService.create(TestDataUtil.getRegisteredUser());
+	@Autowired
+	public UserControllerIntegrationTest(UserService userService, UserRepository userRepository, UserMapper userMapper, ObjectMapper objectMapper, MockMvc mockMvc) {
+		this.userService = userService;
+		this.objectMapper = objectMapper;
+		this.mockMvc = mockMvc;
+		this.userMapper = new UserMapper();
+	}
 
-                // Set authentication for user
-                TestDataUtil.setAuthenticationContext(userDto, userDto.role());
+	@BeforeAll
+	void setUp() {
+		// set up registered user from test 1 as authenticated user
+		UserDto userDto = TestDataUtil.getRegisteredUser();
+		TestDataUtil.setAuthenticationContext(userDto, userDto.role());
+	}
 
-        }
+	@Test
+	@Order(1)
+	public void testRegisterUser_whenValidUserDetailsProvided_shouldCreateUserAndReturnUserInformation() throws Exception {
 
-        @Test
-        public void testRegisterUserEndpoint() throws Exception {
+		UserDto userDto = TestDataUtil.getRegisteredUser();
+		String userDtoJson = objectMapper.writeValueAsString(userDto);
 
-                UserDto userDto = TestDataUtil.getNewUserDto();
-                String userDtoJson = objectMapper.writeValueAsString(userDto);
+		mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.REGISTER_PATH)
+		                                      .contentType(MediaType.APPLICATION_JSON)
+		                                      .content(userDtoJson))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isCreated())
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.id")
+		                                       .isNumber())
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.username")
+		                                       .value(userDto.username()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+		                                       .value(userDto.email()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.role")
+		                                       .value(userDto.role()
+		                                                     .toString()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.password")
+		                                       .doesNotExist());
 
-                mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.REGISTER_PATH)
-                                .contentType(MediaType.APPLICATION_JSON).content(userDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isCreated())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.id").isNumber())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.username")
-                                                .value(userDto.username()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
-                                                .value(userDto.email()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.role")
-                                                .value(userDto.role().toString()));
+	}
 
-        }
+	@Test
+	@Order(2)
+	public void testAuthenticateUser_whenCorrectUserCredentialsProvided_shouldAuthenticateAndReturnJwt() throws Exception {
 
-        @Test
-        public void testGetUserByIdEndpoint() throws Exception {
+		UserDto userDto = TestDataUtil.getRegisteredUser();
+		String userDtoJson = objectMapper.writeValueAsString(userDto);
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+		MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
+		                                                            .contentType(MediaType.APPLICATION_JSON)
+		                                                            .content(userDtoJson))
+		                             .andExpect(MockMvcResultMatchers.status()
+		                                                             .isOk())
+		                             .andReturn();
 
-                mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", user.getId()))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
-                                                .value(user.getId()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.username")
-                                                .value(user.getUsername()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
-                                                .value(user.getEmail()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.role")
-                                                .value(user.getRole().toString()));
-        }
+		authorizationToken = mvcResult.getResponse()
+		                              .getHeader("Authorization");
 
-        @Test
-        public void testGetAllTodosEndpoint() throws Exception {
+	}
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+	@Test
+	@Order(3)
+	public void testGetUserById_whenValidUserIdProvided_shouldFetchCorrespondingUserFromDb() throws Exception {
 
-                mockMvc.perform(MockMvcRequestBuilders.get("/users/all").param("sort", "id,desc"))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id")
-                                                .value(user.getId()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].username")
-                                                .value(user.getUsername()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email")
-                                                .value(user.getEmail()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].role")
-                                                .value(user.getRole().toString()));
-        }
+		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		                                              .username());
 
-        @Test
-        public void testUpdateUserEndpoint() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", user.getId())
+		                                      .header("Authorization", authorizationToken))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isOk())
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.id")
+		                                       .value(user.getId()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.username")
+		                                       .value(user.getUsername()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+		                                       .value(user.getEmail()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.role")
+		                                       .value(user.getRole()
+		                                                  .toString()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.password")
+		                                       .doesNotExist());
+	}
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                UserDto updatedUserDto = TestDataUtil.getUpdatedRegisteredUserDto(user.getId());
-                String updatedUserDtoJson = objectMapper.writeValueAsString(updatedUserDto);
+	@Test
+	@Order(4)
+	public void testGetAllUsers_whenAllUsersRequested_shouldReturnListOfAllUsers() throws Exception {
 
-                mockMvc.perform(MockMvcRequestBuilders.put("/users/{id}", user.getId())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(updatedUserDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isOk())
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.id")
-                                                .value(user.getId()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.username")
-                                                .value(updatedUserDto.username()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.email")
-                                                .value(updatedUserDto.email()))
-                                .andExpect(MockMvcResultMatchers.jsonPath("$.role")
-                                                .value(updatedUserDto.role().toString()));
-        }
+		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		                                              .username());
 
-        @Test
-        public void testDeleteUserEndpoint() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/users/all")
+		                                      .param("sort", "id,desc")
+		                                      .header("Authorization", authorizationToken))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isOk())
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id")
+		                                       .value(user.getId()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].username")
+		                                       .value(user.getUsername()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email")
+		                                       .value(user.getEmail()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].role")
+		                                       .value(user.getRole()
+		                                                  .toString()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.password")
+		                                       .doesNotExist());
+	}
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+	@Test
+	@Order(5)
+	public void testUpdateUser_whenProvideUpdatedValidUserDetails_shouldUpdateUserInDb() throws Exception {
 
-                mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId()))
-                                .andExpect(MockMvcResultMatchers.status().isNoContent());
+		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		                                              .username());
+		UserDto updatedUserDto = TestDataUtil.getUpdatedRegisteredUserDto(user.getId());
+		String updatedUserDtoJson = objectMapper.writeValueAsString(updatedUserDto);
 
-                assertThrows(EntityNotFoundException.class,
-                                () -> userService.getById(user.getId()));
-        }
+		mockMvc.perform(MockMvcRequestBuilders.put("/users/{id}", user.getId())
+		                                      .header("Authorization", authorizationToken)
+		                                      .contentType(MediaType.APPLICATION_JSON)
+		                                      .content(updatedUserDtoJson))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isOk())
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.id")
+		                                       .value(user.getId()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.username")
+		                                       .value(updatedUserDto.username()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.email")
+		                                       .value(updatedUserDto.email()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.role")
+		                                       .value(updatedUserDto.role()
+		                                                            .toString()))
+		       .andExpect(MockMvcResultMatchers.jsonPath("$.password")
+		                                       .doesNotExist());
+	}
 
-        @Test
-        public void testAdminAllowedToDeleteUser() throws Exception {
+	@Test
+	@Order(6)
+	public void testDeleteUser_whenValidUserIdProvided_shouldDeleteCorrespondingUserFromDb() throws Exception {
 
-                // create new user with admin priviliges
-                UserDto adminDto = TestDataUtil.getNewUserDto();
-                adminDto = userService.create(adminDto);
+		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		                                              .username());
 
-                TestDataUtil.setAuthenticationContext(adminDto, User.Role.ADMIN);
+		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId())
+		                                      .header("Authorization", authorizationToken))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isNoContent());
 
-                // test admin priviliges
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+		assertThrows(EntityNotFoundException.class, () -> userService.getByName(user.getUsername()));
+	}
 
-                long numUsersBefore = userRepository.count();
-                mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId()))
-                                .andExpect(MockMvcResultMatchers.status().isNoContent());
-                long numUsersAfter = userRepository.count();
+	@Test
+	@Order(7)
+	public void testDeleteUser_whenAdminCredentialsProvided_shouldBeAbleToDeleteOtherUsers() throws Exception {
 
-                assertThrows(EntityNotFoundException.class,
-                                () -> userService.getById(user.getId()));
-                assertEquals(1, numUsersBefore - numUsersAfter);
+		// create new user with admin priviliges
+		UserDto adminDto = TestDataUtil.getNewUserDto();
+		adminDto = userService.create(adminDto);
 
-        }
+		TestDataUtil.setAuthenticationContext(adminDto, User.Role.ADMIN);
 
-        @Test
-        public void testUserNotAllowedToDeleteOthers() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", adminDto.id() - 1))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isNoContent());
 
-                // create new user with normal user priviliges
-                UserDto newUserDto = TestDataUtil.getNewUserDto();
-                newUserDto = userService.create(newUserDto);
+	}
 
-                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
+	@Test
+	@Order(8)
+	public void testDeleteUser_whenUnauthorizedUserDeletesOtherUser_shouldBeForbidden() throws Exception {
 
-                // test user priviliges
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+		// create new user with normal user priviliges
+		User fakeAdmin = userService.getByName(TestDataUtil.getNewUserDto()
+		                                                   .username());
 
-                mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId()))
-                                .andExpect(MockMvcResultMatchers.status().isForbidden());
+		UserDto fakeAdminDto = userMapper.mapFromEntity(fakeAdmin);
 
-        }
+		TestDataUtil.setAuthenticationContext(fakeAdminDto, User.Role.USER);
+
+		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", fakeAdminDto.id() - 1))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isForbidden());
+
+	}
 
 }

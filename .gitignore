@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 
 react-course/
+react-hub/
 
 ### STS ###
 .apt_generated
