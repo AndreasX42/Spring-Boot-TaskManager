@@ -35,18 +35,11 @@ public class UserControllerIntegrationTest {
 	private String authorizationToken;
 
 	@Autowired
-	public UserControllerIntegrationTest(UserService userService, UserRepository userRepository, UserMapper userMapper, ObjectMapper objectMapper, MockMvc mockMvc) {
+	public UserControllerIntegrationTest(UserService userService, UserRepository userRepository, UserMapper userMapper, ObjectMapper objectMapper, MockMvc mockMvc, UserMapper userMapper1) {
 		this.userService = userService;
 		this.objectMapper = objectMapper;
 		this.mockMvc = mockMvc;
-		this.userMapper = new UserMapper();
-	}
-
-	@BeforeAll
-	void setUp() {
-		// set up registered user from test 1 as authenticated user
-		UserDto userDto = TestDataUtil.getRegisteredUser();
-		TestDataUtil.setAuthenticationContext(userDto, userDto.role());
+		this.userMapper = userMapper1;
 	}
 
 	@Test

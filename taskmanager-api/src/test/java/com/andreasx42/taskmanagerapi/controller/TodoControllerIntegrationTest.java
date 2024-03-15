@@ -1,265 +1,310 @@
 package com.andreasx42.taskmanagerapi.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
 import com.andreasx42.taskmanagerapi.TestDataUtil;
 import com.andreasx42.taskmanagerapi.dto.TodoDto;
 import com.andreasx42.taskmanagerapi.dto.UserDto;
 import com.andreasx42.taskmanagerapi.entity.User;
 import com.andreasx42.taskmanagerapi.exception.EntityNotFoundException;
 import com.andreasx42.taskmanagerapi.repository.TodoRepository;
+import com.andreasx42.taskmanagerapi.security.SecurityConstants;
 import com.andreasx42.taskmanagerapi.service.impl.TodoService;
 import com.andreasx42.taskmanagerapi.service.impl.UserService;
 import com.andreasx42.taskmanagerapi.service.mapper.impl.TodoMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureMockMvc
 public class TodoControllerIntegrationTest {
 
-        private final TodoService todoService;
-        private final TodoRepository todoRepository;
-        private final TodoMapper todoMapper;
-        private final ObjectMapper objectMapper;
-        private final UserService userService;
-        private final MockMvc mockMvc;
+	private final TodoService todoService;
+	private final TodoMapper todoMapper;
+	private final ObjectMapper objectMapper;
+	private final UserService userService;
+	private final MockMvc mockMvc;
 
-        @Autowired
-        public TodoControllerIntegrationTest(TodoService todoService, TodoRepository todoRepository,
-                        TodoMapper todoMapper, ObjectMapper objectMapper, UserService userService, MockMvc mockMvc) {
-                this.todoService = todoService;
-                this.todoRepository = todoRepository;
-                this.todoMapper = todoMapper;
-                this.objectMapper = objectMapper;
-                this.userService = userService;
-                this.mockMvc = mockMvc;
+	private String authorizationTokenRegisteredUser;
+	private String authorizationTokenNewUser;
+	private TodoDto existingTodoDto;
+	private UserDto registeredUser;
+	private UserDto newUser;
 
-        }
+	@Autowired
+	public TodoControllerIntegrationTest(TodoService todoService, TodoRepository todoRepository, TodoMapper todoMapper, ObjectMapper objectMapper, UserService userService, MockMvc mockMvc) {
+		this.todoService = todoService;
+		this.todoMapper = todoMapper;
+		this.objectMapper = objectMapper;
+		this.userService = userService;
+		this.mockMvc = mockMvc;
 
-        @BeforeEach
-        public void setUp() {
-                UserDto userDto = userService.create(TestDataUtil.getRegisteredUser());
-                TodoDto todoDto = todoService.create(userDto.id(), TestDataUtil.getExistingTodoForRegisteredUser());
+	}
 
-                TestDataUtil.setAuthenticationContext(userDto, userDto.role());
-        }
+	@Test
+	@Order(1)
+	public void testCreateTodo_whenValidTodoDetailsProvided_shouldCreateTodoForUser() throws Exception {
 
-        @Test
-        public void testGetTodoByIdEndpoint() throws Exception {
+		// create user and authenticate for jwt
+		registeredUser = userService.create(TestDataUtil.getRegisteredUser());
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
+		String userDtoJson = objectMapper.writeValueAsString(TestDataUtil.getRegisteredUser());
 
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/{todoId}", todoDto.id()))
-                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+		authorizationTokenRegisteredUser = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
+		                                                                         .contentType(MediaType.APPLICATION_JSON)
+		                                                                         .content(userDtoJson))
+		                                          .andExpect(MockMvcResultMatchers.status()
+		                                                                          .isOk())
+		                                          .andReturn()
+		                                          .getResponse()
+		                                          .getHeader("Authorization");
 
-                String content = result.getResponse().getContentAsString();
-                TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
+		TodoDto newTodoDto = TestDataUtil.getExistingTodoForRegisteredUser(registeredUser.id());
 
-                assertTodoDtoValues(todoDto, returnedTodoDto);
+		String newTodoDtoJson = objectMapper.writeValueAsString(newTodoDto);
 
-        }
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/todos/user/{userId}", registeredUser.id())
+		                                                         .contentType(MediaType.APPLICATION_JSON)
+		                                                         .header("Authorization",
+				                                                         authorizationTokenRegisteredUser)
+		                                                         .content(newTodoDtoJson))
+		                          .andExpect(MockMvcResultMatchers.status()
+		                                                          .isCreated())
+		                          .andReturn();
 
-        @Test
-        public void testGetAllTodosByUserIdEndpoint() throws Exception {
+		String content = result.getResponse()
+		                       .getContentAsString();
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
+		existingTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-                MvcResult result = mockMvc
-                                .perform(MockMvcRequestBuilders.get("/todos/user/{userId}", user.getId())
-                                                .param("page", "0").param("size", "1").param("sort", "id,desc"))
-                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+		assertNotNull(existingTodoDto.id());
+		assertEquals(newTodoDto.userId(), existingTodoDto.userId());
+		assertEquals(newTodoDto.name(), existingTodoDto.name());
+		assertEquals(newTodoDto.priority(), existingTodoDto.priority());
+		assertEquals(newTodoDto.status(), existingTodoDto.status());
+		assertEquals(newTodoDto.untilDate(), existingTodoDto.untilDate());
+	}
 
-                TodoDto firstResultTodoDto = extractTodoDtoFromResult(result);
-                assertTodoDtoValues(todoDto, firstResultTodoDto);
-        }
+	@Test
+	@Order(2)
+	public void testUpdateTodo_whenUpdatedTodoDetailsProvided_shouldPersistNewDetailsToDb() throws Exception {
 
-        @Test
-        public void testGetAllTodosEndpoint() throws Exception {
+		TodoDto oldTodoDto = todoMapper.mapFromEntity(todoService.getById(existingTodoDto.id()));
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto todoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
+		TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(oldTodoDto.id(), registeredUser.id());
+		String updatedTodoDtoJson = objectMapper.writeValueAsString(updatedTodoDto);
 
-                MvcResult result = mockMvc
-                                .perform(MockMvcRequestBuilders.get("/todos/all").param("page", "0").param("size", "1")
-                                                .param("sort", "id,desc"))
-                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/todos/user/{userId}/todo/{todoId}",
+				                                                         registeredUser.id(),
+				                                                         oldTodoDto.id())
+		                                                         .header("Authorization",
+				                                                         authorizationTokenRegisteredUser)
+		                                                         .contentType(MediaType.APPLICATION_JSON)
+		                                                         .content(updatedTodoDtoJson))
+		                          .andExpect(MockMvcResultMatchers.status()
+		                                                          .isOk())
+		                          .andReturn();
 
-                TodoDto firstResultTodoDto = extractTodoDtoFromResult(result);
-                assertTodoDtoValues(todoDto, firstResultTodoDto);
-        }
+		String content = result.getResponse()
+		                       .getContentAsString();
 
-        @Test
-        public void testCreateTodoEndpoint() throws Exception {
+		existingTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto newTodoDto = TestDataUtil.getNewTodoDto(user.getId());
-                String newTodoDtoJson = objectMapper.writeValueAsString(newTodoDto);
+		assertEquals(updatedTodoDto.userId(), existingTodoDto.userId());
+		assertEquals(updatedTodoDto.name(), existingTodoDto.name());
+		assertEquals(updatedTodoDto.priority(), existingTodoDto.priority());
+		assertEquals(updatedTodoDto.status(), existingTodoDto.status());
+		assertEquals(updatedTodoDto.untilDate(), existingTodoDto.untilDate());
 
-                MvcResult result = mockMvc
-                                .perform(MockMvcRequestBuilders.post("/todos/user/{userId}", user.getId())
-                                                .contentType(MediaType.APPLICATION_JSON).content(newTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isCreated()).andReturn();
+	}
 
-                String content = result.getResponse().getContentAsString();
-                TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
+	@Test
+	@Order(3)
+	public void testGetTodo_whenProvidedValidTodoId_shouldReturnTodoDetails() throws Exception {
 
-                assertTodoDtoValues(newTodoDto, returnedTodoDto);
-        }
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/{todoId}", existingTodoDto.id())
+		                                                         .header("Authorization",
+				                                                         authorizationTokenRegisteredUser))
+		                          .andExpect(MockMvcResultMatchers.status()
+		                                                          .isOk())
+		                          .andReturn();
 
-        @Test
-        public void testUpdateTodoEndpoint() throws Exception {
+		String content = result.getResponse()
+		                       .getContentAsString();
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
+		TodoDto resultTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-                TodoDto oldTodoDto = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
-                TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(oldTodoDto.id(), user.getId());
-                String updatedTodoDtoJson = objectMapper.writeValueAsString(updatedTodoDto);
+		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
+		assertEquals(existingTodoDto.name(), resultTodoDto.name());
+		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
+		assertEquals(existingTodoDto.status(), resultTodoDto.status());
+		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
 
-                MvcResult result = mockMvc
-                                .perform(MockMvcRequestBuilders
-                                                .put("/todos/user/{userId}/todo/{todoId}", user.getId(),
-                                                                oldTodoDto.id())
-                                                .contentType(MediaType.APPLICATION_JSON).content(updatedTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+	}
 
-                String content = result.getResponse().getContentAsString();
-                TodoDto returnedTodoDto = objectMapper.readValue(content, TodoDto.class);
+	@Test
+	@Order(4)
+	public void testGetAllTodos_whenProvidedValidUserId_shouldReturnListOfUserTodos() throws Exception {
 
-                assertTodoDtoValues(updatedTodoDto, returnedTodoDto);
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/user/{userId}", registeredUser.id())
+		                                                         .param("page", "0")
+		                                                         .param("size", "1")
+		                                                         .param("sort", "id,desc")
+		                                                         .header("Authorization",
+				                                                         authorizationTokenRegisteredUser))
+		                          .andExpect(MockMvcResultMatchers.status()
+		                                                          .isOk())
+		                          .andReturn();
 
-        }
+		TodoDto resultTodoDto = extractTodoDtoFromResult(result);
 
-        @Test
-        public void testDeleteTodoEndpoint() throws Exception {
+		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
+		assertEquals(existingTodoDto.name(), resultTodoDto.name());
+		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
+		assertEquals(existingTodoDto.status(), resultTodoDto.status());
+		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
+	}
 
-                User user = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto userTodo = todoService.getByUserId(user.getId()).stream().findFirst().orElseThrow();
+	@Test
+	@Order(5)
+	public void testGetAllTodos_whenProvidedAdminCredentials_shouldReturnListOfAllTodosInDb() throws Exception {
 
-                long numTodosBefore = todoRepository.count();
-                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", user.getId(),
-                                userTodo.id())).andExpect(MockMvcResultMatchers.status().isNoContent());
-                long numTodosAfter = todoRepository.count();
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/todos/all")
+		                                                         .param("page", "0")
+		                                                         .param("size", "1")
+		                                                         .param("sort", "id,desc")
+		                                                         .header("Authorization",
+				                                                         authorizationTokenRegisteredUser))
+		                          .andExpect(MockMvcResultMatchers.status()
+		                                                          .isOk())
+		                          .andReturn();
 
-                assertEquals(1, numTodosBefore - numTodosAfter);
-                assertThrows(EntityNotFoundException.class, () -> todoService.getById(userTodo.id()));
-        }
+		TodoDto resultTodoDto = extractTodoDtoFromResult(result);
 
-        @Test
-        public void testCreateTodoForOtherUserNotAllowed() throws Exception {
+		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
+		assertEquals(existingTodoDto.name(), resultTodoDto.name());
+		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
+		assertEquals(existingTodoDto.status(), resultTodoDto.status());
+		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
 
-                UserDto newUserDto = userService.create(TestDataUtil.getNewUserDto());
-                User oldUser = userService.getByName(TestDataUtil.getRegisteredUser().username());
+	}
 
-                TodoDto newTodoDto = TestDataUtil.getNewTodoDto(oldUser.getId());
-                String newTodoDtoJson = objectMapper.writeValueAsString(newTodoDto);
+	@Test
+	@Order(6)
+	public void testDeleteTodo_whenProvidedValidUserIdAndTodoId_shouldDeleteCorrespondingTodoFromDb() throws Exception {
 
-                // set authentication context for new user and create a new todo for old user
-                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
+		mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}",
+				                                      registeredUser.id(),
+				                                      existingTodoDto.id())
+		                                      .header("Authorization", authorizationTokenRegisteredUser))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isNoContent());
 
-                mockMvc.perform(MockMvcRequestBuilders.post("/todos/user/{userId}", oldUser.getId())
-                                .contentType(MediaType.APPLICATION_JSON).content(newTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isForbidden());
-        }
+		assertThrows(EntityNotFoundException.class, () -> todoService.getById(existingTodoDto.id()));
+	}
 
-        @Test
-        public void testUpdateTodoOfOtherUserNotAllowed() throws Exception {
+	@Test
+	@Order(7)
+	public void testCreateTodo_whenProvidedWrongUserAuthCredentials_shouldReturnForbidden403() throws Exception {
 
-                UserDto newUserDto = userService.create(TestDataUtil.getNewUserDto());
-                User oldUser = userService.getByName(TestDataUtil.getRegisteredUser().username());
+		// persist new user to db
+		newUser = userService.create(TestDataUtil.getNewUserDto());
 
-                TodoDto oldUserTodo = todoService.getByUserId(oldUser.getId()).stream().findFirst().orElseThrow();
-                TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(oldUserTodo.id(), oldUser.getId());
-                String updatedTodoDtoJson = objectMapper.writeValueAsString(updatedTodoDto);
+		String newUserJson = objectMapper.writeValueAsString(TestDataUtil.getNewUserDto());
 
-                // set authentication context for new user and create a new todo for old user
-                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
+		authorizationTokenNewUser = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
+		                                                                  .contentType(MediaType.APPLICATION_JSON)
+		                                                                  .content(newUserJson))
+		                                   .andExpect(MockMvcResultMatchers.status()
+		                                                                   .isOk())
+		                                   .andReturn()
+		                                   .getResponse()
+		                                   .getHeader("Authorization");
 
-                mockMvc.perform(MockMvcRequestBuilders
-                                .put("/todos/user/{userId}/todo/{todoId}", oldUser.getId(), oldUserTodo.id())
-                                .contentType(MediaType.APPLICATION_JSON).content(updatedTodoDtoJson))
-                                .andExpect(MockMvcResultMatchers.status().isForbidden());
-        }
+		TodoDto newTodoDto = TestDataUtil.getNewTodoDto(registeredUser.id());
+		String newTodoDtoJson = objectMapper.writeValueAsString(newTodoDto);
 
-        @Test
-        public void testDeleteTodoOfOtherUserNotAllowed() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.post("/todos/user/{userId}", registeredUser.id())
+		                                      .contentType(MediaType.APPLICATION_JSON)
+		                                      .header("Authorization", authorizationTokenNewUser)
+		                                      .content(newTodoDtoJson))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isForbidden());
+	}
 
-                UserDto newUserDto = userService.create(TestDataUtil.getNewUserDto());
+	@Test
+	@Order(8)
+	public void testUpdateTodo_whenRequestUpdateOtherUsersTodo_shouldReturnForbidden403() throws Exception {
 
-                User oldUser = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto oldUserTodo = todoService.getByUserId(oldUser.getId()).stream().findFirst().orElseThrow();
+		TodoDto updatedTodoDto = TestDataUtil.getUpdatedTodoDto(existingTodoDto.id(), registeredUser.id());
+		String updatedTodoDtoJson = objectMapper.writeValueAsString(updatedTodoDto);
 
-                // set authentication context for new user and create a new todo for old user
-                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.USER);
+		mockMvc.perform(MockMvcRequestBuilders.put("/todos/user/{userId}/todo/{todoId}",
+				                                      registeredUser.id(),
+				                                      existingTodoDto.id())
+		                                      .contentType(MediaType.APPLICATION_JSON)
+		                                      .header("Authorization", authorizationTokenNewUser)
+		                                      .content(updatedTodoDtoJson))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isForbidden());
+	}
 
-                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
-                                oldUserTodo.id())).andExpect(MockMvcResultMatchers.status().isForbidden());
+	@Test
+	@Order(9)
+	public void testDeleteTodo_whenRequestDeleteOtherUsersTodo_shouldReturnForbidden403() throws Exception {
 
-        }
+		mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}",
+				                                      registeredUser.id(),
+				                                      existingTodoDto.id())
+		                                      .header("Authorization", authorizationTokenNewUser))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isForbidden());
 
-        @Test
-        public void testDeleteTodoOfOtherUserAllowedForAdmins() throws Exception {
+	}
 
-                UserDto newUserDto = userService.create(TestDataUtil.getNewUserDto());
+	@Test
+	@Order(10)
+	public void testDeleteTodo_whenRequestDeleteOtherUsersTodoWithAdminCredentials_shouldBeSuccessful() throws Exception {
 
-                User oldUser = userService.getByName(TestDataUtil.getRegisteredUser().username());
-                TodoDto oldUserTodo = todoService.getByUserId(oldUser.getId()).stream().findFirst().orElseThrow();
+		// set auth context as user with role admin
+		TestDataUtil.setAuthenticationContext(TestDataUtil.getNewUserDto(), User.Role.ADMIN);
 
-                // set authentication context for new user and create a new todo for old user
-                TestDataUtil.setAuthenticationContext(newUserDto, User.Role.ADMIN);
+		mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}",
+				       registeredUser.id(),
+				       existingTodoDto.id()))
+		       .andExpect(MockMvcResultMatchers.status()
+		                                       .isNoContent());
 
-                long numTodosBefore = todoRepository.count();
-                mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}", oldUser.getId(),
-                                oldUserTodo.id())).andExpect(MockMvcResultMatchers.status().isNoContent());
-                long numTodosAfter = todoRepository.count();
+		assertThrows(EntityNotFoundException.class, () -> todoService.getById(existingTodoDto.id()));
+	}
 
-                assertEquals(1, numTodosBefore - numTodosAfter);
-                assertThrows(EntityNotFoundException.class, () -> todoService.getById(oldUserTodo.id()));
-        }
+	private TodoDto extractTodoDtoFromResult(MvcResult result) throws Exception {
 
-        private TodoDto extractTodoDtoFromResult(MvcResult result) throws Exception {
+		String content = result.getResponse()
+		                       .getContentAsString();
+		JsonNode rootNode = objectMapper.readTree(content); // Parse JSON into a tree
+		// structure
 
-                String content = result.getResponse().getContentAsString();
-                JsonNode rootNode = objectMapper.readTree(content); // Parse JSON into a tree
-                                                                    // structure
+		// Get the 'content' node which holds the array of TodoDto
+		JsonNode contentNode = rootNode.get("content");
 
-                // Get the 'content' node which holds the array of TodoDto
-                JsonNode contentNode = rootNode.get("content");
+		assertTrue(contentNode.isArray());
+		assertTrue(contentNode.size() > 0);
 
-                assertTrue(contentNode.isArray());
-                assertTrue(contentNode.size() > 0);
+		// Get the first TodoDto from the array
+		return objectMapper.convertValue(contentNode.get(0), TodoDto.class);
 
-                // Get the first TodoDto from the array
-                return objectMapper.convertValue(contentNode.get(0), TodoDto.class);
-
-        }
-
-        private void assertTodoDtoValues(TodoDto expectedtodoDto, TodoDto resultDto) throws Exception {
-                // assertEquals(expectedtodoDto.id(), resultDto.id()); expectation not known a
-                // priori
-                assertEquals(expectedtodoDto.userId(), resultDto.userId());
-                assertEquals(expectedtodoDto.name(), resultDto.name());
-                assertEquals(expectedtodoDto.priority(), resultDto.priority());
-                assertEquals(expectedtodoDto.status(), resultDto.status());
-                assertEquals(expectedtodoDto.untilDate(), resultDto.untilDate());
-        }
+	}
 
 }
