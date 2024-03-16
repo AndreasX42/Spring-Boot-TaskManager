@@ -16,34 +16,24 @@ import java.util.Set;
 
 public final class TestDataUtil {
 
-	private final static UserDto registeredUser = new UserDto(null,
-			"Jane Doe",
-			"Jane.doe@gmail.com",
-			User.Role.USER,
-			"pw123");
-
-	private final static UserDto newUserDto = new UserDto(null,
-			"John Doe",
-			"john.doe@gmail.com",
-			User.Role.USER,
-			"pw123");
-
 	private TestDataUtil() {
 	}
 
-	public static UserDto getRegisteredUser() {
-		return registeredUser;
+	public static UserDto getRegisteredUser(String id) {
+		String username = "Jane_Doe" + id;
+		return new UserDto(null, username, username + "@gmail.com", User.Role.USER, "pw123");
 	}
 
-	public static UserDto getNewUserDto() {
-		return newUserDto;
+	public static UserDto getNewUserDto(String id) {
+		String username = "John_Doe" + id;
+		return new UserDto(null, username, username + "@gmail.com", User.Role.USER, "pw123");
 	}
 
-	public static UserDto getUpdatedRegisteredUserDto(Long id) {
+	public static UserDto getUpdatedRegisteredUserDto(String uuid, Long id) {
 		return new UserDto(id,
-				getRegisteredUser().username(),
+				getRegisteredUser(uuid).username(),
 				"new_address@gmail.com",
-				getRegisteredUser().role(),
+				getRegisteredUser(uuid).role(),
 				"new_password");
 	}
 

@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -42,6 +44,9 @@ public class TodoControllerIntegrationTest {
 	private UserDto registeredUser;
 	private UserDto newUser;
 
+	private String id = UUID.randomUUID()
+	                        .toString();
+
 	@Autowired
 	public TodoControllerIntegrationTest(TodoService todoService, TodoRepository todoRepository, TodoMapper todoMapper, ObjectMapper objectMapper, UserService userService, MockMvc mockMvc) {
 		this.todoService = todoService;
@@ -57,9 +62,9 @@ public class TodoControllerIntegrationTest {
 	public void testCreateTodo_whenValidTodoDetailsProvided_shouldCreateTodoForUser() throws Exception {
 
 		// create user and authenticate for jwt
-		registeredUser = userService.create(TestDataUtil.getRegisteredUser());
+		registeredUser = userService.create(TestDataUtil.getRegisteredUser(id));
 
-		String userDtoJson = objectMapper.writeValueAsString(TestDataUtil.getRegisteredUser());
+		String userDtoJson = objectMapper.writeValueAsString(TestDataUtil.getRegisteredUser(id));
 
 		authorizationTokenRegisteredUser = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
 		                                                                         .contentType(MediaType.APPLICATION_JSON)
@@ -219,9 +224,9 @@ public class TodoControllerIntegrationTest {
 	public void testCreateTodo_whenProvidedWrongUserAuthCredentials_shouldReturnForbidden403() throws Exception {
 
 		// persist new user to db
-		newUser = userService.create(TestDataUtil.getNewUserDto());
+		newUser = userService.create(TestDataUtil.getNewUserDto(id));
 
-		String newUserJson = objectMapper.writeValueAsString(TestDataUtil.getNewUserDto());
+		String newUserJson = objectMapper.writeValueAsString(TestDataUtil.getNewUserDto(id));
 
 		authorizationTokenNewUser = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
 		                                                                  .contentType(MediaType.APPLICATION_JSON)
@@ -278,7 +283,7 @@ public class TodoControllerIntegrationTest {
 	public void testDeleteTodo_whenRequestDeleteOtherUsersTodoWithAdminCredentials_shouldBeSuccessful() throws Exception {
 
 		// set auth context as user with role admin
-		TestDataUtil.setAuthenticationContext(TestDataUtil.getNewUserDto(), User.Role.ADMIN);
+		TestDataUtil.setAuthenticationContext(TestDataUtil.getNewUserDto(id), User.Role.ADMIN);
 
 		mockMvc.perform(MockMvcRequestBuilders.delete("/todos/user/{userId}/todo/{todoId}",
 				       registeredUser.id(),

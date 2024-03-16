@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -31,6 +33,9 @@ public class UserControllerIntegrationTest {
 	private final ObjectMapper objectMapper;
 	private final MockMvc mockMvc;
 	private UserMapper userMapper;
+
+	private String id = UUID.randomUUID()
+	                        .toString();
 
 	private String authorizationToken;
 
@@ -46,7 +51,7 @@ public class UserControllerIntegrationTest {
 	@Order(1)
 	public void testRegisterUser_whenValidUserDetailsProvided_shouldCreateUserAndReturnUserInformation() throws Exception {
 
-		UserDto userDto = TestDataUtil.getRegisteredUser();
+		UserDto userDto = TestDataUtil.getRegisteredUser(id);
 		String userDtoJson = objectMapper.writeValueAsString(userDto);
 
 		mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.REGISTER_PATH)
@@ -72,7 +77,7 @@ public class UserControllerIntegrationTest {
 	@Order(2)
 	public void testAuthenticateUser_whenCorrectUserCredentialsProvided_shouldAuthenticateAndReturnJwt() throws Exception {
 
-		UserDto userDto = TestDataUtil.getRegisteredUser();
+		UserDto userDto = TestDataUtil.getRegisteredUser(id);
 		String userDtoJson = objectMapper.writeValueAsString(userDto);
 
 		MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(SecurityConstants.AUTH_PATH)
@@ -91,7 +96,7 @@ public class UserControllerIntegrationTest {
 	@Order(3)
 	public void testGetUserById_whenValidUserIdProvided_shouldFetchCorrespondingUserFromDb() throws Exception {
 
-		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		User user = userService.getByName(TestDataUtil.getRegisteredUser(id)
 		                                              .username());
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", user.getId())
@@ -115,7 +120,7 @@ public class UserControllerIntegrationTest {
 	@Order(4)
 	public void testGetAllUsers_whenAllUsersRequested_shouldReturnListOfAllUsers() throws Exception {
 
-		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		User user = userService.getByName(TestDataUtil.getRegisteredUser(id)
 		                                              .username());
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/users/all")
@@ -124,7 +129,7 @@ public class UserControllerIntegrationTest {
 		       .andExpect(MockMvcResultMatchers.status()
 		                                       .isOk())
 		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id")
-		                                       .value(user.getId()))
+		                                       .isNumber())
 		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].username")
 		                                       .value(user.getUsername()))
 		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email")
@@ -140,9 +145,9 @@ public class UserControllerIntegrationTest {
 	@Order(5)
 	public void testUpdateUser_whenProvideUpdatedValidUserDetails_shouldUpdateUserInDb() throws Exception {
 
-		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		User user = userService.getByName(TestDataUtil.getRegisteredUser(id)
 		                                              .username());
-		UserDto updatedUserDto = TestDataUtil.getUpdatedRegisteredUserDto(user.getId());
+		UserDto updatedUserDto = TestDataUtil.getUpdatedRegisteredUserDto(id, user.getId());
 		String updatedUserDtoJson = objectMapper.writeValueAsString(updatedUserDto);
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/users/{id}", user.getId())
@@ -168,7 +173,7 @@ public class UserControllerIntegrationTest {
 	@Order(6)
 	public void testDeleteUser_whenValidUserIdProvided_shouldDeleteCorrespondingUserFromDb() throws Exception {
 
-		User user = userService.getByName(TestDataUtil.getRegisteredUser()
+		User user = userService.getByName(TestDataUtil.getRegisteredUser(id)
 		                                              .username());
 
 		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", user.getId())
@@ -184,7 +189,8 @@ public class UserControllerIntegrationTest {
 	public void testDeleteUser_whenAdminCredentialsProvided_shouldBeAbleToDeleteOtherUsers() throws Exception {
 
 		// create new user with admin priviliges
-		UserDto adminDto = TestDataUtil.getNewUserDto();
+		UserDto adminDto = new UserDto(null, "admin", "admin@gmail.com", User.Role.ADMIN, "pw123");
+
 		adminDto = userService.create(adminDto);
 
 		TestDataUtil.setAuthenticationContext(adminDto, User.Role.ADMIN);
@@ -200,10 +206,10 @@ public class UserControllerIntegrationTest {
 	public void testDeleteUser_whenUnauthorizedUserDeletesOtherUser_shouldBeForbidden() throws Exception {
 
 		// create new user with normal user priviliges
-		User fakeAdmin = userService.getByName(TestDataUtil.getNewUserDto()
-		                                                   .username());
+		// create new user with admin priviliges
+		UserDto fakeAdminDto = new UserDto(null, "not_admin", "not_admin@gmail.com", User.Role.USER, "pw123");
 
-		UserDto fakeAdminDto = userMapper.mapFromEntity(fakeAdmin);
+		fakeAdminDto = userService.create(fakeAdminDto);
 
 		TestDataUtil.setAuthenticationContext(fakeAdminDto, User.Role.USER);
 

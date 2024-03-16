@@ -1,5 +1,11 @@
 package com.andreasx42.taskmanagerapi.service.impl;
 
+import com.andreasx42.taskmanagerapi.TestDataUtil;
+import com.andreasx42.taskmanagerapi.dto.UserDto;
+import com.andreasx42.taskmanagerapi.entity.User;
+import com.andreasx42.taskmanagerapi.exception.DuplicateEntityException;
+import com.andreasx42.taskmanagerapi.repository.UserRepository;
+import com.andreasx42.taskmanagerapi.service.mapper.impl.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,22 +15,19 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.andreasx42.taskmanagerapi.TestDataUtil;
-import com.andreasx42.taskmanagerapi.dto.UserDto;
-import com.andreasx42.taskmanagerapi.entity.User;
-import com.andreasx42.taskmanagerapi.exception.DuplicateEntityException;
-import com.andreasx42.taskmanagerapi.repository.UserRepository;
-import com.andreasx42.taskmanagerapi.service.mapper.impl.UserMapper;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import java.util.Optional;
-
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
+
+	private String id = UUID.randomUUID()
+	                        .toString();
 
 	@Mock
 	private UserRepository userRepository;
@@ -47,12 +50,14 @@ public class UserServiceTest {
 	@Test
 	public void testCreateUser_whenDuplicateEmailProvided_shouldThrowDuplicateEntityException() {
 
-		UserDto userDto = TestDataUtil.getNewUserDto();
+		UserDto userDto = TestDataUtil.getNewUserDto(id);
 		User user = userMapper.mapToEntity(userDto);
 
 		when(userRepository.findByEmail(userDto.email())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class, () -> userService.create(userDto), "Should throw DuplicateEntityException since email already used");
+		assertThrows(DuplicateEntityException.class,
+				() -> userService.create(userDto),
+				"Should throw DuplicateEntityException since email already used");
 
 		// Verify that userRepository methods were called
 		verify(userRepository, times(1)).findByEmail(userDto.email());
@@ -63,13 +68,15 @@ public class UserServiceTest {
 	@Test
 	public void testCreateUser_whenDuplicateUsernameProvided_shouldThrowDuplicateEntityException() {
 
-		UserDto userDto = TestDataUtil.getNewUserDto();
+		UserDto userDto = TestDataUtil.getNewUserDto(id);
 		User user = userMapper.mapToEntity(userDto);
 
 		when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 		when(userRepository.findByUsername(userDto.username())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class, () -> userService.create(userDto), "Should throw DuplicateEntityException since username already used");
+		assertThrows(DuplicateEntityException.class,
+				() -> userService.create(userDto),
+				"Should throw DuplicateEntityException since username already used");
 
 		// Verify that userRepository methods were called
 		verify(userRepository, times(1)).findByEmail(anyString());
@@ -80,23 +87,33 @@ public class UserServiceTest {
 	@Test
 	public void testUpdateUser_whenNewEmailAlreadyExists_shouldThrowDuplicateEntityException() {
 
-		UserDto userDto = TestDataUtil.getNewUserDto();
+		UserDto userDto = TestDataUtil.getNewUserDto(id);
 		User user = userMapper.mapToEntity(userDto);
-		UserDto userDtoUpdated = new UserDto(userDto.id(), userDto.username(), "new_email@gmail.com", userDto.role(), null);
+		UserDto userDtoUpdated = new UserDto(userDto.id(),
+				userDto.username(),
+				"new_email@gmail.com",
+				userDto.role(),
+				null);
 
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 		when(userRepository.findByEmail(userDtoUpdated.email())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class, () -> userService.update(1L, userDtoUpdated), "Should throw DuplicateEntityException since email already used");
+		assertThrows(DuplicateEntityException.class,
+				() -> userService.update(1L, userDtoUpdated),
+				"Should throw DuplicateEntityException since email already used");
 
 	}
 
 	@Test
 	public void testUpdateUser_whenNewPasswordProvided_shouldUpdatePasswordInDb() {
 
-		UserDto userDto = TestDataUtil.getNewUserDto();
+		UserDto userDto = TestDataUtil.getNewUserDto(id);
 		User user = userMapper.mapToEntity(userDto);
-		UserDto userDtoUpdated = new UserDto(userDto.id(), userDto.username(), userDto.email(), userDto.role(), "new_password");
+		UserDto userDtoUpdated = new UserDto(userDto.id(),
+				userDto.username(),
+				userDto.email(),
+				userDto.role(),
+				"new_password");
 
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 		when(bCryptPasswordEncoder.encode(userDtoUpdated.password())).thenReturn("encoded_new_password");
