@@ -1,16 +1,10 @@
 package com.andreasx42.taskmanagerapi;
 
+import com.andreasx42.taskmanagerapi.repository.UserRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.dao.DataIntegrityViolationException;
-
-import com.andreasx42.taskmanagerapi.entity.User;
-import com.andreasx42.taskmanagerapi.repository.UserRepository;
-
-import java.util.Arrays;
-
-import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @SpringBootApplication
@@ -25,7 +19,7 @@ public class SpringProjectApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		try {
+		/*try {
 			User[] users = new User[] {
 					new User("John Casey", "john.casey@example.com", "J0hnD!123"),
 					new User("Jane Smith", "jane.smith@example.com", "JaneS@321"),
@@ -38,7 +32,7 @@ public class SpringProjectApplication implements CommandLineRunner {
 
 		catch (Exception e) {
 
-		}
+		}*/
 	}
 
 }
