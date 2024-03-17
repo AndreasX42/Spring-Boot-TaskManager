@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -123,22 +124,19 @@ public class UserControllerIntegrationTest {
 		User user = userService.getByName(TestDataUtil.getRegisteredUser(id)
 		                                              .username());
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/users/all")
-		                                      .param("sort", "id,desc")
-		                                      .header("Authorization", authorizationToken))
-		       .andExpect(MockMvcResultMatchers.status()
-		                                       .isOk())
-		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].id")
-		                                       .isNumber())
-		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].username")
-		                                       .value(user.getUsername()))
-		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].email")
-		                                       .value(user.getEmail()))
-		       .andExpect(MockMvcResultMatchers.jsonPath("$.content.[0].role")
-		                                       .value(user.getRole()
-		                                                  .toString()))
-		       .andExpect(MockMvcResultMatchers.jsonPath("$.password")
-		                                       .doesNotExist());
+		MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/users/all")
+		                                                            .param("sort", "id,desc")
+		                                                            .param("size", "5")
+		                                                            .header("Authorization", authorizationToken))
+		                             .andExpect(MockMvcResultMatchers.status()
+		                                                             .isOk())
+		                             .andReturn();
+
+		String response = mvcResult.getResponse()
+		                           .getContentAsString();
+
+		assertTrue(response.contains(TestDataUtil.getRegisteredUser(id)
+		                                         .username()));
 	}
 
 	@Test

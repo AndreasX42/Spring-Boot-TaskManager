@@ -1,5 +1,20 @@
 version: "3"
 services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: ./react-frontend
+    container_name: app
+    ports:
+      - "5173:5173"
+    # volumes:
+    #   - ./app:/app
+    #   - ./tmp:/app/tmp
+    # environment:
+    #   - RAGFLOW_HOST=ragflow-backend
+    #   - RAGFLOW_PORT=8080
+    restart: always
+
   api:
     build:
       dockerfile: Dockerfile
@@ -15,7 +30,6 @@ services:
     #   - RAGFLOW_PORT=8080
     restart: always
 
-  
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -26,7 +40,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgres/data:/var/lib/postgresql/data
     restart: always
 
   # pgadmin:

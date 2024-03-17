@@ -4,8 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-react-course/
-react-hub/
+_react-course/
+_react-hub/
 
 ### STS ###
 .apt_generated
