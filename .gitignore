@@ -6,6 +6,7 @@ target/
 
 _react-course/
 _react-hub/
+postgres/data/
 
 ### STS ###
 .apt_generated
