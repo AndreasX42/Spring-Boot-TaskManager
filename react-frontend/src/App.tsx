@@ -1,22 +1,23 @@
-import { Box, Flex, Grid, GridItem } from "@chakra-ui/react";
+import { Box, Flex, Grid, GridItem, Show } from "@chakra-ui/react";
 import NavBar from "./components/NavBar";
+import GameGrid from "./components/GameGrid";
+import GenreList from "./components/GenreList";
 import { useState } from "react";
 import { Genre } from "./hooks/useGenres";
 import PlatformSelector from "./components/PlatformSelector";
-import { Platform } from "./hooks/useTodos";
+import { Platform } from "./hooks/useGames";
 import SortSelector from "./components/SortSelector";
-import TodosHeading from "./components/TodoHeading";
-import TodoGrid from "./components/TodoGrid";
+import GameHeading from "./components/GameHeading";
 
-export interface TodoQuery {
-  userId: number;
-  todoId: number;
+export interface GameQuery {
+  genre: Genre | null;
+  platform: Platform | null;
   sortOrder: string;
   searchText: string;
 }
 
 function App() {
-  const [todoQuery, setTodoQuery] = useState<TodoQuery>({} as TodoQuery);
+  const [gameQuery, setGameQuery] = useState<GameQuery>({} as GameQuery);
 
   return (
     <Grid
@@ -31,22 +32,20 @@ function App() {
     >
       <GridItem area="nav">
         <NavBar
-          onSearch={(searchText) => setTodoQuery({ ...todoQuery, searchText })}
+          onSearch={(searchText) => setGameQuery({ ...gameQuery, searchText })}
         />
       </GridItem>
-
-      {/* <Show above="lg">
+      <Show above="lg">
         <GridItem area="aside" paddingX={5}>
           <GenreList
             onSelectGenre={(genre) => setGameQuery({ ...gameQuery, genre })}
             selectedGenre={gameQuery.genre}
           />
         </GridItem>
-      </Show> */}
-
+      </Show>
       <GridItem area="main">
         <Box paddingLeft={2}>
-          <TodosHeading todoQuery={todoQuery} />
+          <GameHeading gameQuery={gameQuery} />
           <Flex marginBottom={5}>
             <Box marginRight={5}>
               <PlatformSelector
@@ -64,7 +63,7 @@ function App() {
             />
           </Flex>
         </Box>
-        <TodoGrid todoQuery={todoQuery} />
+        <GameGrid gameQuery={gameQuery} />
       </GridItem>
     </Grid>
   );

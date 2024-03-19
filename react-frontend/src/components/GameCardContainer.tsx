@@ -5,12 +5,12 @@ interface Props {
   children: ReactNode;
 }
 
-const TodoContainer = ({ children }: Props) => {
+const GameCardContainer = ({ children }: Props) => {
   return (
-    <Box borderRadius={10} overflow="hidden" maxWidth={1000}>
+    <Box borderRadius={10} overflow="hidden">
       {children}
     </Box>
   );
 };
 
-export default TodoContainer;
+export default GameCardContainer;

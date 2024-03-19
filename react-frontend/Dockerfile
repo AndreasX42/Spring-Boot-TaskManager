@@ -10,4 +10,7 @@ RUN npm install
 
 COPY ./ ./
 
+# Install nodemon for hot reloading
+RUN npm install --save-dev nodemon
+
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
