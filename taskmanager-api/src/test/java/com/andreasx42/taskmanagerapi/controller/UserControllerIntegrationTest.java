@@ -21,8 +21,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -135,8 +135,8 @@ public class UserControllerIntegrationTest {
 		String response = mvcResult.getResponse()
 		                           .getContentAsString();
 
-		assertTrue(response.contains(TestDataUtil.getRegisteredUser(id)
-		                                         .username()));
+		assertThat(response.contains(TestDataUtil.getRegisteredUser(id)
+		                                         .username())).isTrue();
 	}
 
 	@Test
@@ -179,7 +179,7 @@ public class UserControllerIntegrationTest {
 		       .andExpect(MockMvcResultMatchers.status()
 		                                       .isNoContent());
 
-		assertThrows(EntityNotFoundException.class, () -> userService.getByName(user.getUsername()));
+		assertThatThrownBy(() -> userService.getByName(user.getUsername())).isInstanceOf(EntityNotFoundException.class);
 	}
 
 	@Test
@@ -191,9 +191,13 @@ public class UserControllerIntegrationTest {
 
 		adminDto = userService.create(adminDto);
 
+		// create another user to be deleted
+		UserDto userDto = TestDataUtil.getRegisteredUser(id);
+		userDto = userService.create(userDto);
+
 		TestDataUtil.setAuthenticationContext(adminDto, User.Role.ADMIN);
 
-		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", adminDto.id() - 1))
+		mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", userDto.id()))
 		       .andExpect(MockMvcResultMatchers.status()
 		                                       .isNoContent());
 

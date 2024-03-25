@@ -64,6 +64,10 @@ public class UserService implements IUserService {
 
 	@Override
 	public void delete(Long id) {
+		if(userRepository.findById(id)
+		                 .isEmpty()) {
+			throw new EntityNotFoundException(id, User.class);
+		}
 		userRepository.deleteById(id);
 	}
 
@@ -78,6 +82,14 @@ public class UserService implements IUserService {
 			throw new DuplicateEntityException("email", userDto.email(), User.class);
 		} else {
 			user.setEmail(userDto.email());
+		}
+
+		if(!userDto.username()
+		           .equals(user.getUsername()) && userRepository.findByUsername(userDto.username())
+		                                                        .isPresent()) {
+			throw new DuplicateEntityException("username", userDto.username(), User.class);
+		} else {
+			user.setUsername(userDto.username());
 		}
 
 		if(userDto.password() != null) {

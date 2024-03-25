@@ -7,8 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 public class UserEntityTest {
@@ -31,12 +30,9 @@ public class UserEntityTest {
 
 		user.setUsername("");
 
-		var constraintViolationException = assertThrows(ConstraintViolationException.class, () -> {
-			testEntityManager.persistAndFlush(user);
-		});
-
-		assertTrue(constraintViolationException.getMessage()
-		                                       .contains("username cannot be blank"));
+		assertThatThrownBy(() -> testEntityManager.persistAndFlush(user)).isInstanceOf(ConstraintViolationException.class)
+		                                                                 .hasMessageContaining(
+				                                                                 "username cannot be blank");
 	}
 
 	@Test
@@ -44,12 +40,9 @@ public class UserEntityTest {
 
 		user.setEmail("");
 
-		var constraintViolationException = assertThrows(ConstraintViolationException.class, () -> {
-			testEntityManager.persistAndFlush(user);
-		});
+		assertThatThrownBy(() -> testEntityManager.persistAndFlush(user)).isInstanceOf(ConstraintViolationException.class)
+		                                                                 .hasMessageContaining("email cannot be blank");
 
-		assertTrue(constraintViolationException.getMessage()
-		                                       .contains("email cannot be blank"));
 	}
 
 	@Test
@@ -57,12 +50,10 @@ public class UserEntityTest {
 
 		user.setPassword("");
 
-		var constraintViolationException = assertThrows(ConstraintViolationException.class, () -> {
-			testEntityManager.persistAndFlush(user);
-		});
+		assertThatThrownBy(() -> testEntityManager.persistAndFlush(user)).isInstanceOf(ConstraintViolationException.class)
+		                                                                 .hasMessageContaining(
+				                                                                 "password cannot be blank");
 
-		assertTrue(constraintViolationException.getMessage()
-		                                       .contains("password cannot be blank"));
 	}
 
 }

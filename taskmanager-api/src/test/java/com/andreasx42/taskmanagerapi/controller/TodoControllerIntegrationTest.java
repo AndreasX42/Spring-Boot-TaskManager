@@ -24,7 +24,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -93,12 +94,12 @@ public class TodoControllerIntegrationTest {
 
 		existingTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-		assertNotNull(existingTodoDto.id());
-		assertEquals(newTodoDto.userId(), existingTodoDto.userId());
-		assertEquals(newTodoDto.name(), existingTodoDto.name());
-		assertEquals(newTodoDto.priority(), existingTodoDto.priority());
-		assertEquals(newTodoDto.status(), existingTodoDto.status());
-		assertEquals(newTodoDto.untilDate(), existingTodoDto.untilDate());
+		assertThat(existingTodoDto.id()).isNotNull();
+		assertThat(existingTodoDto.userId()).isEqualTo(newTodoDto.userId());
+		assertThat(existingTodoDto.name()).isEqualTo(newTodoDto.name());
+		assertThat(existingTodoDto.priority()).isEqualTo(newTodoDto.priority());
+		assertThat(existingTodoDto.status()).isEqualTo(newTodoDto.status());
+		assertThat(existingTodoDto.untilDate()).isEqualTo(newTodoDto.untilDate());
 	}
 
 	@Test
@@ -126,11 +127,12 @@ public class TodoControllerIntegrationTest {
 
 		existingTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-		assertEquals(updatedTodoDto.userId(), existingTodoDto.userId());
-		assertEquals(updatedTodoDto.name(), existingTodoDto.name());
-		assertEquals(updatedTodoDto.priority(), existingTodoDto.priority());
-		assertEquals(updatedTodoDto.status(), existingTodoDto.status());
-		assertEquals(updatedTodoDto.untilDate(), existingTodoDto.untilDate());
+		assertThat(existingTodoDto.id()).isNotNull();
+		assertThat(existingTodoDto.userId()).isEqualTo(updatedTodoDto.userId());
+		assertThat(existingTodoDto.name()).isEqualTo(updatedTodoDto.name());
+		assertThat(existingTodoDto.priority()).isEqualTo(updatedTodoDto.priority());
+		assertThat(existingTodoDto.status()).isEqualTo(updatedTodoDto.status());
+		assertThat(existingTodoDto.untilDate()).isEqualTo(updatedTodoDto.untilDate());
 
 	}
 
@@ -150,11 +152,12 @@ public class TodoControllerIntegrationTest {
 
 		TodoDto resultTodoDto = objectMapper.readValue(content, TodoDto.class);
 
-		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
-		assertEquals(existingTodoDto.name(), resultTodoDto.name());
-		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
-		assertEquals(existingTodoDto.status(), resultTodoDto.status());
-		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
+		assertThat(resultTodoDto.id()).isNotNull();
+		assertThat(resultTodoDto.userId()).isEqualTo(existingTodoDto.userId());
+		assertThat(resultTodoDto.name()).isEqualTo(existingTodoDto.name());
+		assertThat(resultTodoDto.priority()).isEqualTo(existingTodoDto.priority());
+		assertThat(resultTodoDto.status()).isEqualTo(existingTodoDto.status());
+		assertThat(resultTodoDto.untilDate()).isEqualTo(existingTodoDto.untilDate());
 
 	}
 
@@ -174,11 +177,12 @@ public class TodoControllerIntegrationTest {
 
 		TodoDto resultTodoDto = extractTodoDtoFromResult(result);
 
-		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
-		assertEquals(existingTodoDto.name(), resultTodoDto.name());
-		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
-		assertEquals(existingTodoDto.status(), resultTodoDto.status());
-		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
+		assertThat(resultTodoDto.id()).isNotNull();
+		assertThat(resultTodoDto.userId()).isEqualTo(existingTodoDto.userId());
+		assertThat(resultTodoDto.name()).isEqualTo(existingTodoDto.name());
+		assertThat(resultTodoDto.priority()).isEqualTo(existingTodoDto.priority());
+		assertThat(resultTodoDto.status()).isEqualTo(existingTodoDto.status());
+		assertThat(resultTodoDto.untilDate()).isEqualTo(existingTodoDto.untilDate());
 	}
 
 	@Test
@@ -197,11 +201,11 @@ public class TodoControllerIntegrationTest {
 
 		TodoDto resultTodoDto = extractTodoDtoFromResult(result);
 
-		assertEquals(existingTodoDto.userId(), resultTodoDto.userId());
-		assertEquals(existingTodoDto.name(), resultTodoDto.name());
-		assertEquals(existingTodoDto.priority(), resultTodoDto.priority());
-		assertEquals(existingTodoDto.status(), resultTodoDto.status());
-		assertEquals(existingTodoDto.untilDate(), resultTodoDto.untilDate());
+		assertThat(resultTodoDto.userId()).isEqualTo(existingTodoDto.userId());
+		assertThat(resultTodoDto.name()).isEqualTo(existingTodoDto.name());
+		assertThat(resultTodoDto.priority()).isEqualTo(existingTodoDto.priority());
+		assertThat(resultTodoDto.status()).isEqualTo(existingTodoDto.status());
+		assertThat(resultTodoDto.untilDate()).isEqualTo(existingTodoDto.untilDate());
 
 	}
 
@@ -216,7 +220,7 @@ public class TodoControllerIntegrationTest {
 		       .andExpect(MockMvcResultMatchers.status()
 		                                       .isNoContent());
 
-		assertThrows(EntityNotFoundException.class, () -> todoService.getById(existingTodoDto.id()));
+		assertThatThrownBy(() -> todoService.getById(existingTodoDto.id())).isInstanceOf(EntityNotFoundException.class);
 	}
 
 	@Test
@@ -291,7 +295,8 @@ public class TodoControllerIntegrationTest {
 		       .andExpect(MockMvcResultMatchers.status()
 		                                       .isNoContent());
 
-		assertThrows(EntityNotFoundException.class, () -> todoService.getById(existingTodoDto.id()));
+		assertThatThrownBy(() -> todoService.getById(existingTodoDto.id())).isInstanceOf(EntityNotFoundException.class);
+
 	}
 
 	private TodoDto extractTodoDtoFromResult(MvcResult result) throws Exception {
@@ -304,8 +309,8 @@ public class TodoControllerIntegrationTest {
 		// Get the 'content' node which holds the array of TodoDto
 		JsonNode contentNode = rootNode.get("content");
 
-		assertTrue(contentNode.isArray());
-		assertTrue(contentNode.size() > 0);
+		assertThat(contentNode.isArray()).isTrue();
+		assertThat(contentNode.size() > 0).isTrue();
 
 		// Get the first TodoDto from the array
 		return objectMapper.convertValue(contentNode.get(0), TodoDto.class);

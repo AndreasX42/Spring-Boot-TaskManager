@@ -18,7 +18,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -55,9 +56,9 @@ public class UserServiceTest {
 
 		when(userRepository.findByEmail(userDto.email())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class,
-				() -> userService.create(userDto),
-				"Should throw DuplicateEntityException since email already used");
+		assertThatThrownBy(() -> userService.create(userDto)).isInstanceOf(DuplicateEntityException.class)
+		                                                     .hasMessageContaining("user with email")
+		                                                     .hasMessageContaining("does already exist");
 
 		// Verify that userRepository methods were called
 		verify(userRepository, times(1)).findByEmail(userDto.email());
@@ -74,9 +75,9 @@ public class UserServiceTest {
 		when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 		when(userRepository.findByUsername(userDto.username())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class,
-				() -> userService.create(userDto),
-				"Should throw DuplicateEntityException since username already used");
+		assertThatThrownBy(() -> userService.create(userDto)).isInstanceOf(DuplicateEntityException.class)
+		                                                     .hasMessageContaining("user with username")
+		                                                     .hasMessageContaining("does already exist");
 
 		// Verify that userRepository methods were called
 		verify(userRepository, times(1)).findByEmail(anyString());
@@ -98,9 +99,9 @@ public class UserServiceTest {
 		when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 		when(userRepository.findByEmail(userDtoUpdated.email())).thenReturn(Optional.of(user));
 
-		assertThrows(DuplicateEntityException.class,
-				() -> userService.update(1L, userDtoUpdated),
-				"Should throw DuplicateEntityException since email already used");
+		assertThatThrownBy(() -> userService.update(1L, userDtoUpdated)).isInstanceOf(DuplicateEntityException.class)
+		                                                                .hasMessageContaining("user with email")
+		                                                                .hasMessageContaining("does already exist");
 
 	}
 
@@ -121,9 +122,9 @@ public class UserServiceTest {
 
 		UserDto resultUserDto = userService.update(1L, userDtoUpdated);
 
-		assertEquals(userDto.username(), resultUserDto.username());
-		assertEquals(userDto.email(), resultUserDto.email());
-		assertNull(resultUserDto.password());
+		assertThat(resultUserDto.username()).isEqualTo(userDto.username());
+		assertThat(resultUserDto.email()).isEqualTo(userDto.email());
+		assertThat(resultUserDto.password()).isNull();
 	}
 
 }

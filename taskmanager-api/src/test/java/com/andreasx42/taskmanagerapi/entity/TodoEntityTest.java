@@ -9,8 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 public class TodoEntityTest {
@@ -44,11 +43,9 @@ public class TodoEntityTest {
 
 		todo.setName("");
 
-		var constraintViolationException = assertThrows(ConstraintViolationException.class,
-				() -> testEntityManager.persistAndFlush(todo));
+		assertThatThrownBy(() -> testEntityManager.persistAndFlush(todo)).isInstanceOf(ConstraintViolationException.class)
+		                                                                 .hasMessageContaining("name cannot be blank");
 
-		assertTrue(constraintViolationException.getMessage()
-		                                       .contains("name cannot be blank"));
 	}
 
 	@Test
@@ -56,11 +53,10 @@ public class TodoEntityTest {
 
 		todo.setUntilDate(LocalDate.MIN);
 
-		var constraintViolationException = assertThrows(ConstraintViolationException.class,
-				() -> testEntityManager.persistAndFlush(todo));
+		assertThatThrownBy(() -> testEntityManager.persistAndFlush(todo)).isInstanceOf(ConstraintViolationException.class)
+		                                                                 .hasMessageContaining(
+				                                                                 "The deadline must be in the future");
 
-		assertTrue(constraintViolationException.getMessage()
-		                                       .contains("The deadline must be in the future"));
 	}
 
 }

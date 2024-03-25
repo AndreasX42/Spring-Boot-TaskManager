@@ -3,7 +3,7 @@
 This Todo application serves as a simple task management system allowing users to create, update, delete and view tasks. 
 It consists of a frontend built with React and a backend developed in Java 17 using Spring Boot 3. The Stack consists of
 
-`Language` [Java 17](https://openjdk.org/projects/jdk/17/)\
+`Language` [Java 21](https://openjdk.org/projects/jdk/21/)\
 `Framework for API` [Spring Boot 3](https://spring.io/projects/spring-boot)\
 `Frontend` [Vite](https://vitejs.dev/) [React](https://reactjs.org/) [TypeScript](https://www.typescriptlang.org/)\
 `Databases` [Postgres](https://www.postgresql.org/)\
