@@ -26,14 +26,12 @@ public class UserService implements IUserService {
 	@Override
 	public User getByName(String username) {
 		Optional<User> userOptional = userRepository.findByUsername(username);
-
 		return userOptional.orElseThrow(() -> new EntityNotFoundException(username, User.class));
 	}
 
 	@Override
 	public User getById(Long id) {
 		Optional<User> userOptional = userRepository.findById(id);
-
 		return userOptional.orElseThrow(() -> new EntityNotFoundException(id, User.class));
 	}
 
@@ -45,7 +43,6 @@ public class UserService implements IUserService {
 
 	@Override
 	public UserDto create(UserDto userDto) {
-
 		if(userRepository.findByEmail(userDto.email())
 		                 .isPresent()) {
 			throw new DuplicateEntityException("email", userDto.email(), User.class);
@@ -68,6 +65,7 @@ public class UserService implements IUserService {
 		                 .isEmpty()) {
 			throw new EntityNotFoundException(id, User.class);
 		}
+
 		userRepository.deleteById(id);
 	}
 
@@ -97,7 +95,6 @@ public class UserService implements IUserService {
 		}
 
 		return userMapper.mapFromEntity(userRepository.save(user));
-
 	}
 
 }

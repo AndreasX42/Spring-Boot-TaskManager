@@ -1,15 +1,10 @@
 package com.andreasx42.taskmanagerapi;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.context.annotation.Bean;
+import com.andreasx42.taskmanagerapi.exception.DuplicateEntityException;
+import com.andreasx42.taskmanagerapi.exception.EntityNotFoundException;
+import com.andreasx42.taskmanagerapi.exception.ErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,73 +14,54 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.andreasx42.taskmanagerapi.exception.DuplicateEntityException;
-import com.andreasx42.taskmanagerapi.exception.EntityNotFoundException;
-
-import com.andreasx42.taskmanagerapi.exception.ErrorResponse;
-
-import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
-        @ExceptionHandler({ EntityNotFoundException.class })
-        public ResponseEntity<ErrorResponse> handleResourceNotFoundException(EntityNotFoundException ex,
-                        HttpServletRequest request) {
+	@ExceptionHandler(EntityNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleResourceNotFoundException(EntityNotFoundException ex, WebRequest request) {
+		return handleErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, request);
+	}
 
-                ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                                Arrays.asList(ex.getMessage()), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
+	@ExceptionHandler(DuplicateEntityException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateResource(DuplicateEntityException ex, WebRequest request) {
+		return handleErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+	}
 
-                return new ResponseEntity<>(reponse, HttpStatus.NOT_FOUND);
-        }
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+		return handleErrorResponse("Data Integrity Violation: we cannot process your request.",
+				HttpStatus.BAD_REQUEST,
+				request);
+	}
 
-        @ExceptionHandler({ DuplicateEntityException.class })
-        public ResponseEntity<ErrorResponse> handleDuplicateResource(DuplicateEntityException ex,
-                        HttpServletRequest request) {
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ErrorResponse> handleDeniedAccess(AccessDeniedException ex, WebRequest request) {
+		return handleErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, request);
+	}
 
-                ErrorResponse reponse = new ErrorResponse(request.getPathInfo(),
-                                Arrays.asList(ex.getMessage()), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidArguments(MethodArgumentNotValidException ex, WebRequest request) {
 
-                return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
-        }
+		String errorMessage = ex.getBindingResult()
+		                        .getFieldErrors()
+		                        .stream()
+		                        .map(fe -> fe.getField() + " - " + fe.getDefaultMessage())
+		                        .collect(Collectors.joining(", "));
 
-        @ExceptionHandler(DataIntegrityViolationException.class)
-        public ResponseEntity<ErrorResponse> handlResponseEntity(DataIntegrityViolationException ex,
-                        HttpServletRequest request) {
+		return handleErrorResponse(errorMessage, HttpStatus.BAD_REQUEST, request);
+	}
 
-                ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                                Arrays.asList("Data Integrity Violation: we cannot process your request."),
-                                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+	private ResponseEntity<ErrorResponse> handleErrorResponse(String message, HttpStatus status, WebRequest request) {
+		String requestURI = ((ServletWebRequest) request).getRequest()
+		                                                 .getRequestURI();
 
-                return new ResponseEntity<>(reponse, HttpStatus.BAD_REQUEST);
-        }
+		ErrorResponse response = new ErrorResponse(requestURI, List.of(message), status.value(), LocalDateTime.now());
 
-        @ExceptionHandler(AccessDeniedException.class)
-        public ResponseEntity<ErrorResponse> handleDeniedAccess(AccessDeniedException ex,
-                        HttpServletRequest request) {
-
-                ErrorResponse reponse = new ErrorResponse(request.getRequestURI(),
-                                Arrays.asList(ex.getMessage()),
-                                HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
-
-                return new ResponseEntity<>(reponse, HttpStatus.FORBIDDEN);
-        }
-
-        @Override
-        protected ResponseEntity<Object> handleMethodArgumentNotValid(
-                        MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status,
-                        WebRequest request) {
-
-                String requestUri = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-                List<String> messages = ex.getBindingResult().getAllErrors().stream()
-                                .map(error -> error.getDefaultMessage())
-                                .collect(Collectors.toList());
-
-                ErrorResponse response = new ErrorResponse(requestUri,
-                                messages, HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
-
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+		return new ResponseEntity<>(response, status);
+	}
 
 }

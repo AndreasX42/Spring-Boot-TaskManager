@@ -11,7 +11,7 @@ INSERT INTO todos (name, priority, status, until_date, user_id)
 VALUES ('Sample Todo of user John Casey17', 'MID', 'OPEN', DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY), 1);
 
 INSERT INTO todos (name, priority, status, until_date, user_id)
-VALUES ('Sample Todo of user Jane Smith123', 'MID', 'OPEN', DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY), 2);
+VALUES ('Sample Todo of user Jane Smith123', 'MID', 'OPEN', DATE_ADD(CURRENT_DATE(), INTERVAL 8 DAY), 2);
 
 INSERT INTO todos (name, priority, status, until_date, user_id)
-VALUES ('Sample Todo of user Emily Johnson21', 'MID', 'OPEN', DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY), 3);
+VALUES ('Sample Todo of user Emily Johnson21', 'MID', 'OPEN', DATE_ADD(CURRENT_DATE(), INTERVAL 9 DAY), 3);
